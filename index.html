@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <title>DON'T PANIC</title>
+    <style>
+
+body {
+  font-family: "PT Sans", Arial, Helvetica, sans-serif;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+demos {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+}
+
+demo, iterationsPerFrame {
+  display: block;
+  padding: 3pt;
+  margin: 4pt;
+  background: #eee;
+  border: 1px solid #ddd;
+  border-radius: 4pt;
+  box-shadow: 4px 4px 6px 0px rgba(0, 0, 0, .4);
+  -webkit-user-select: none;
+}
+
+demo:hover {
+  background: #ddd;
+  box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, .4);
+}
+
+iterationsPerFrame {
+  background: #f8f8f8;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  color: blue;
+}
+
+iterationsPerFrame:after {
+  content: ' iterations / frame';
+}
+
+    </style>
+  </head>
+  <body>
+    <script src="3rdparty/pointerevents.js"></script>
+    <script src="relax.js"></script>
+    <canvas id="canvas" touch-action="none"></canvas>
+    <demos id="demos"></demos>
+    <iterationsPerFrame id="ipf"></iterationsPerFrame>
+    <script>
+
+var canvas = document.getElementById('canvas');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+var relax = new Relax(canvas);
+
+var examples = {};
+
+function showDemo(name) {
+  relax.clear();
+  examples[name]();
+}
+
+
+onload = function() {
+  showDemo('chain');
+};
+
+    </script>
+
+    <script src="demos/rod.js"></script>
+    <script src="demos/chain.js"></script>
+    <script src="demos/lazy-tongs.js"></script>
+
+    <script>
+
+var demos = document.getElementById('demos');
+
+Object.keys(examples).forEach(function(e) {
+  var demo = document.createElement('demo');
+  demo.appendChild(document.createTextNode(e));
+  demo.onclick = function() {
+    showDemo(e);
+  };
+  demos.appendChild(demo);
+});
+
+var ipf = document.getElementById('ipf');
+setInterval(
+    function() {
+      ipf.innerHTML = relax.iterationsPerFrame;
+    },
+    100
+);
+
+    </script>
+  </body>
+</html>
+
