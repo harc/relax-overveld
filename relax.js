@@ -43,8 +43,9 @@ function Relax(canvas) {
     this.selectionIndices = [];
   }
 
-  var iPad = navigator.userAgent.match(/iPad/i) !== null;
-  Point.prototype.radius = iPad ? 20 : 8;
+  var tablet = navigator.userAgent.match(/iPad/i) !== null ||
+               navigator.userAgent.match(/Android/i) !== null;
+  Point.prototype.radius = tablet ? 20 : 8;
 
   Point.prototype.draw = function(ctxt) {
     ctxt.fillStyle = this.color;
@@ -116,35 +117,41 @@ function Relax(canvas) {
     });
   }
 
-  
+ 
+  this.keydown = function(k) {
+    switch (k) {
+      case 'P': self.enterPointMode();  break;
+      default:
+        if (applyFns[k] && applyFn !== applyFns[k]) {
+          clearSelection();
+          applyFn = applyFns[k];
+        }
+    }
+  };
+ 
   canvas.addEventListener(
       'keydown',
       function(e) {
-        var k = String.fromCharCode(e.keyCode);
-        switch (k) {
-          case 'P': self.enterPointMode();  break;
-          default:
-            if (applyFns[k] && applyFn !== applyFns[k]) {
-              clearSelection();
-              applyFn = applyFns[k];
-            }
-        }
+        self.keydown(String.fromCharCode(e.keyCode));
       },
       false
   );
 
+  this.keyup = function(k) {
+    switch (k) {
+      case 'P': self.exitPointMode();  break;
+      default:
+        if (applyFn === applyFns[k]) {
+          clearSelection();
+          applyFn = undefined;
+        }
+    }
+  };
+
   canvas.addEventListener(
       'keyup',
       function(e) {
-        var k = String.fromCharCode(e.keyCode);
-        switch (k) {
-          case 'P': self.exitPointMode();  break;
-          default:
-            if (applyFn === applyFns[k]) {
-              clearSelection();
-              applyFn = undefined;
-            }
-        }
+        self.keyup(String.fromCharCode(e.keyCode));
       },
       false
   );
@@ -418,9 +425,11 @@ function Relax(canvas) {
   };
 
   this.addLengthConstraint = function(p1, p2, l) {
-    var c = new LengthConstraint(p1, p2, l);
-    constraints.push(c);
-    return c;
+    if (l > 0.001) {
+      var c = new LengthConstraint(p1, p2, l);
+      constraints.push(c);
+      return c;
+    }
   };
 }
 

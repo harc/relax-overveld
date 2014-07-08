@@ -20,14 +20,14 @@ demos {
   z-index: 2000;
 }
 
-controls {
+actions {
   position: absolute;
   bottom: 20px;
   left: 20px;
   z-index: 2000;
 }
 
-demo, control, iterationsPerFrame {
+demo, action, iterationsPerFrame {
   display: block;
   padding: 3pt;
   margin: 4pt;
@@ -38,16 +38,16 @@ demo, control, iterationsPerFrame {
   -webkit-user-select: none;
 }
 
-demo:hover, control:hover {
+demo:hover, action:hover {
   background: #ddd;
   box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, .4);
 }
 
-control {
+action {
   background: #ccccff;
 }
 
-control:hover {
+action:hover {
   background: #ccccee
 }
 
@@ -70,15 +70,14 @@ iterationsPerFrame:after {
     <script src="relax.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
     <demos id="demos"></demos>
-<!--
-    <controls id="controls">
-      <control id="pointControl">point</control>
-      <control id="coordControl">coord</control>
-      <control id="equivControl">equiv</control>
-      <control id="eqDistControl">eqDist</control>
-      <control id="lengthControl">length</control>
-    </controls>
--->
+    <actions id="actions">
+      <action key='P'>point</action>
+      <action key='F'>coordinate</action>
+      <action key='C'>coincidence</action>
+      <action key='Q'>equivalence</action>
+      <action key='E'>eqdist</action>
+      <action key='L'>length</action>
+    </actions>
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
     <script>
 
@@ -95,6 +94,25 @@ function showDemo(name) {
   examples[name]();
 }
 
+var actions = document.getElementsByTagName('action');
+for (var idx = 0; idx < actions.length; idx++) {
+  var action = actions[idx];
+  action.setAttribute('touch-action', 'none');
+  action.addEventListener(
+      'pointerdown',
+      function(e) {
+        relax.keydown(this.getAttribute('key'));
+      },
+      false
+  );
+  action.addEventListener(
+      'pointerup',
+      function(e) {
+        relax.keyup(this.getAttribute('key'));
+      },
+      false
+  );
+}
 
 onload = function() {
   showDemo('clear');
