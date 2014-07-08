@@ -2,6 +2,7 @@ function Relax(canvas) {
 
   var self = this;
   var ctxt = canvas.getContext('2d');
+  ctxt.font = '12px Arial';
 
   var points = [];
   var lines = [];
@@ -9,7 +10,29 @@ function Relax(canvas) {
 
   var fingers = {};
 
-  function square(x) { return x * x; }
+  var pointMode = false;
+  var lastPoint;
+
+  var applyFn;
+  var selection = [];
+
+  function square(x) {
+    return x * x;
+  }
+
+  function dist(p1, p2) {
+    return Math.sqrt(square(p2.x - p1.x) + square(p2.y - p1.y));
+  }
+
+  // ---------------------------
+
+  var applyFns = {
+    F: function(p)              { self.addCoordinateConstraint(p, p.x, p.y); },
+    C: function(p1, p2)         { self.addCoincidenceConstraint(p1, p2); },
+    Q: function(p1, p2, p3, p4) { self.addEquivalenceConstraint(p1, p2, p3, p4); },
+    E: function(p1, p2, p3, p4) { self.addEqualDistanceConstraint(p1, p2, p3, p4); },
+    L: function(p1, p2)         { self.addLengthConstraint(p1, p2, dist(p1, p2)); }
+  };
 
   // ---------------------------
 
@@ -17,10 +40,11 @@ function Relax(canvas) {
     this.x = x;
     this.y = y;
     this.color = optColor || 'slateblue';
+    this.selectionIndices = [];
   }
 
   var iPad = navigator.userAgent.match(/iPad/i) !== null;
-  Point.prototype.radius = iPad ? 20 : 5;
+  Point.prototype.radius = iPad ? 20 : 8;
 
   Point.prototype.draw = function(ctxt) {
     ctxt.fillStyle = this.color;
@@ -30,6 +54,22 @@ function Relax(canvas) {
     ctxt.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
     ctxt.closePath();
     ctxt.fill();
+    ctxt.stroke();
+    if (this.selectionIndices.length > 0) {
+      this.drawSelectionIndices();
+    }
+  };
+
+  Point.prototype.drawSelectionIndices = function() {
+    var text = this.selectionIndices.join(', ');
+    ctxt.textAlign = 'center';
+    ctxt.textBaseline = 'middle';
+    ctxt.lineWidth = 1;
+    ctxt.strokeStyle = 'blue';
+    ctxt.strokeText(text, this.x - 1, this.y - 1);
+    ctxt.stroke();
+    ctxt.strokeStyle = 'yellow';
+    ctxt.strokeText(text, this.x, this.y);
     ctxt.stroke();
   };
 
@@ -76,6 +116,39 @@ function Relax(canvas) {
     });
   }
 
+  
+  canvas.addEventListener(
+      'keydown',
+      function(e) {
+        var k = String.fromCharCode(e.keyCode);
+        switch (k) {
+          case 'P': self.enterPointMode();  break;
+          default:
+            if (applyFns[k] && applyFn !== applyFns[k]) {
+              clearSelection();
+              applyFn = applyFns[k];
+            }
+        }
+      },
+      false
+  );
+
+  canvas.addEventListener(
+      'keyup',
+      function(e) {
+        var k = String.fromCharCode(e.keyCode);
+        switch (k) {
+          case 'P': self.exitPointMode();  break;
+          default:
+            if (applyFn === applyFns[k]) {
+              clearSelection();
+              applyFn = undefined;
+            }
+        }
+      },
+      false
+  );
+
   canvas.addEventListener(
       'pointerdown',
       function(e) {
@@ -83,7 +156,7 @@ function Relax(canvas) {
         var pointIdx;
         for (var idx = 0; idx < points.length; idx++) {
           var p = points[idx];
-          if (p.contains(e.x, e.y)) {
+          if (p.contains(e.clientX, e.clientY)) {
             point = p;
             pointIdx = idx;
           }
@@ -91,8 +164,31 @@ function Relax(canvas) {
         if (point) {
           points.splice(pointIdx, 1);
           points.push(point);
-          fingers[e.pointerId] = {x: e.x, y: e.y, point: point};
+          fingers[e.pointerId] = {x: e.clientX, y: e.clientY, point: point};
           point.isSelected = true;
+          if (pointMode) {
+            var oldLastPoint = lastPoint;
+            lastPoint = point;
+            if (oldLastPoint && oldLastPoint !== lastPoint) {
+              self.addLine(oldLastPoint, lastPoint);
+            }
+          }
+          if (applyFn) {
+            var selectionIndex = selection.push(point);
+            point.selectionIndices.push(selectionIndex);
+            if (selection.length === applyFn.length) {
+              applyFn.apply(undefined, selection);
+              clearSelection();
+            }
+          }
+        } else {
+          if (pointMode) {
+            var oldLastPoint = lastPoint;
+            lastPoint = self.addPoint(e.clientX, e.clientY);
+            if (oldLastPoint) {
+              self.addLine(oldLastPoint, lastPoint);
+            }
+          }
         }
       },
       false
@@ -103,8 +199,8 @@ function Relax(canvas) {
       function(e) {
         var finger = fingers[e.pointerId];
         if (finger) {
-          finger.x = e.x;
-          finger.y = e.y;
+          finger.x = e.clientX;
+          finger.y = e.clientY;
         }
       },
       false
@@ -122,83 +218,99 @@ function Relax(canvas) {
       false
   );
 
+  this.enterPointMode = function() {
+    pointMode = true;
+  };
+
+  this.exitPointMode = function() {
+    pointMode = false;
+    lastPoint = undefined;
+  };
+
+  function clearSelection() {
+    selection = [];
+    points.forEach(function(point) {
+      point.selectionIndices = [];
+    });
+  }
+
   // ---------------------------
 
-  function CoordinateConstraint(c, x, y) {
-    this.c = c;
+  function CoordinateConstraint(p, x, y) {
+    this.p = p;
     this.x = x;
     this.y = y;
   }
 
   CoordinateConstraint.prototype.addDeltas = function() {
-    this.c.addDelta(this.x - this.c.x, this.y - this.c.y);
+    this.p.addDelta(this.x - this.p.x, this.y - this.p.y);
   };
 
-  function CoincidenceConstraint(c1, c2) {
-    this.c1 = c1;
-    this.c2 = c2;
+  function CoincidenceConstraint(p1, p2) {
+    this.p1 = p1;
+    this.p2 = p2;
   }
 
   CoincidenceConstraint.prototype.addDeltas = function() {
-    var dx = (this.c2.x - this.c1.x) / 2;
-    var dy = (this.c2.y - this.c1.y) / 2;
-    this.c1.addDelta(dx, dy);
-    this.c2.addDelta(-dx, -dy);
+    var dx = (this.p2.x - this.p1.x) / 2;
+    var dy = (this.p2.y - this.p1.y) / 2;
+    this.p1.addDelta(dx, dy);
+    this.p2.addDelta(-dx, -dy);
   };
 
-  function EquivalenceConstraint(c1, c2, c3, c4) {
-    this.c1 = c1;
-    this.c2 = c2;
-    this.c3 = c3;
-    this.c4 = c4;
+  function EquivalenceConstraint(p1, p2, p3, p4) {
+    this.p1 = p1;
+    this.p2 = p2;
+    this.p3 = p3;
+    this.p4 = p4;
   }
 
   EquivalenceConstraint.prototype.addDeltas = function() {
-    var dx1 = (this.c2.x + this.c3.x - this.c4.x - this.c1.x) / 4;
-    var dy1 = (this.c2.y + this.c3.y - this.c4.y - this.c1.y) / 4;
-    this.c1.addDelta(dx1, dy1);
-    this.c4.addDelta(dx1, dy1);
+    var dx1 = (this.p2.x + this.p3.x - this.p4.x - this.p1.x) / 4;
+    var dy1 = (this.p2.y + this.p3.y - this.p4.y - this.p1.y) / 4;
+    this.p1.addDelta(dx1, dy1);
+    this.p4.addDelta(dx1, dy1);
 
-    var dx2 = (this.c1.x + this.c4.x - this.c2.x - this.c3.x) / 4;
-    var dy2 = (this.c1.y + this.c4.y - this.c2.y - this.c3.y) / 4;
-    this.c2.addDelta(dx2, dy2);
-    this.c3.addDelta(dx2, dy2);
+    var dx2 = (this.p1.x + this.p4.x - this.p2.x - this.p3.x) / 4;
+    var dy2 = (this.p1.y + this.p4.y - this.p2.y - this.p3.y) / 4;
+    this.p2.addDelta(dx2, dy2);
+    this.p3.addDelta(dx2, dy2);
   };
 
-  function EqualDistanceConstraint(c1, c2, c3, c4) {
-    this.c1 = c1;
-    this.c2 = c2;
-    this.c3 = c3;
-    this.c4 = c4;
+  function EqualDistanceConstraint(p1, p2, p3, p4) {
+    this.p1 = p1;
+    this.p2 = p2;
+    this.p3 = p3;
+    this.p4 = p4;
   }
 
   EqualDistanceConstraint.prototype.addDeltas = function() {
-    var l12 = Math.sqrt(square(this.c1.x - this.c2.x) + square(this.c1.y - this.c2.y));
-    var l34 = Math.sqrt(square(this.c3.x - this.c4.x) + square(this.c3.y - this.c4.y));
+    var l12 = dist(this.p1, this.p2);
+    var l34 = dist(this.p3, this.p4);
     var delta = (l12 - l34) / 4;
-    var e12x = (this.c2.x - this.c1.x) / l12;
-    var e12y = (this.c2.y - this.c1.y) / l12;
+    var e12x = (this.p2.x - this.p1.x) / l12;
+    var e12y = (this.p2.y - this.p1.y) / l12;
 
-    this.c1.addDelta(delta * e12x, delta * e12y);
-    this.c4.addDelta(delta * e12x, delta * e12y);
-    this.c2.addDelta(-delta * e12x, -delta * e12y);
-    this.c3.addDelta(-delta * e12x, -delta * e12y);
+    this.p1.addDelta(delta * e12x, delta * e12y);
+    this.p4.addDelta(delta * e12x, delta * e12y);
+    this.p2.addDelta(-delta * e12x, -delta * e12y);
+    this.p3.addDelta(-delta * e12x, -delta * e12y);
   };
 
-  function LengthConstraint(c1, c2, l) {
-    this.c1 = c1;
-    this.c2 = c2;
+  function LengthConstraint(p1, p2, l) {
+    this.p1 = p1;
+    this.p2 = p2;
     this.l = l;
   }
 
   LengthConstraint.prototype.addDeltas = function() {
-    var l12 = Math.sqrt(square(this.c1.x - this.c2.x) + square(this.c1.y - this.c2.y));
+    var l12 = dist(this.p1, this.p2);
     var delta = (l12 - this.l) / 2;
-    var e12x = (this.c2.x - this.c1.x) / l12;
-    var e12y = (this.c2.y - this.c1.y) / l12;
+    var e12x = (this.p2.x - this.p1.x) / l12;
+    var e12y = (this.p2.y - this.p1.y) / l12;
 
-    this.c1.addDelta(delta * e12x, delta * e12y);
-    this.c2.addDelta(-delta * e12x, -delta * e12y);
+    this.p1.addDelta(delta * e12x, delta * e12y);
+    this.p2.addDelta(-delta * e12x, -delta * e12y);
   };
 
   // ---------------------------
@@ -213,12 +325,19 @@ function Relax(canvas) {
     constraints.forEach(function(constraint) {
       if (constraint instanceof CoordinateConstraint) {
         forEachFinger(function(finger) {
-          if (finger.point === constraint.c) {
+          if (finger.point === constraint.p) {
             constraint.x = finger.x;
             constraint.y = finger.y;
           }
         });
       }
+    });
+  }
+
+  function movePointsToFingers() {
+    forEachFinger(function(finger) {
+      finger.point.x = finger.x;
+      finger.point.y = finger.y;
     });
   }
 
@@ -230,10 +349,7 @@ function Relax(canvas) {
       var t;
       do {
         count++;
-        forEachFinger(function(finger) {
-          finger.point.x = finger.x;
-          finger.point.y = finger.y;
-        });
+        movePointsToFingers();
         points.forEach(function(point) {
           point.clearDeltas();
         });
@@ -246,9 +362,12 @@ function Relax(canvas) {
         });
         t = Date.now() - t0;
       } while (t < 1000 / 65);
+      self.iterationsPerFrame = count;
+    } else {
+      movePointsToFingers();
+      self.iterationsPerFrame = 0;
     }
     redraw();
-    self.iterationsPerFrame = count;
     requestAnimationFrame(step);
   }
 
@@ -274,8 +393,14 @@ function Relax(canvas) {
     return l;
   };
 
-  this.addCoordinateConstraint = function(p1, p2, x, y) {
-    var c = new CoordinateConstraint(p1, p2, x, y);
+  this.addCoordinateConstraint = function(p, x, y) {
+    var c = new CoordinateConstraint(p, x, y);
+    constraints.push(c);
+    return c;
+  };
+
+  this.addCoincidenceConstraint = function(p1, p2) {
+    var c = new CoincidenceConstraint(p1, p2);
     constraints.push(c);
     return c;
   };
@@ -286,8 +411,16 @@ function Relax(canvas) {
     return c;
   };
 
+  this.addEqualDistanceConstraint = function(p1, p2, p3, p4) {
+    var c = new EqualDistanceConstraint(p1, p2, p3, p4);
+    constraints.push(c);
+    return c;
+  };
+
   this.addLengthConstraint = function(p1, p2, l) {
-    return constraints.push(new LengthConstraint(p1, p2, l));
+    var c = new LengthConstraint(p1, p2, l);
+    constraints.push(c);
+    return c;
   };
 }
 

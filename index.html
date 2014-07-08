@@ -20,7 +20,14 @@ demos {
   z-index: 2000;
 }
 
-demo, iterationsPerFrame {
+controls {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 2000;
+}
+
+demo, control, iterationsPerFrame {
   display: block;
   padding: 3pt;
   margin: 4pt;
@@ -31,9 +38,17 @@ demo, iterationsPerFrame {
   -webkit-user-select: none;
 }
 
-demo:hover {
+demo:hover, control:hover {
   background: #ddd;
   box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, .4);
+}
+
+control {
+  background: #ccccff;
+}
+
+control:hover {
+  background: #ccccee
 }
 
 iterationsPerFrame {
@@ -53,8 +68,17 @@ iterationsPerFrame:after {
   <body>
     <script src="3rdparty/pointerevents.js"></script>
     <script src="relax.js"></script>
-    <canvas id="canvas" touch-action="none"></canvas>
+    <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
     <demos id="demos"></demos>
+<!--
+    <controls id="controls">
+      <control id="pointControl">point</control>
+      <control id="coordControl">coord</control>
+      <control id="equivControl">equiv</control>
+      <control id="eqDistControl">eqDist</control>
+      <control id="lengthControl">length</control>
+    </controls>
+-->
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
     <script>
 
@@ -73,11 +97,12 @@ function showDemo(name) {
 
 
 onload = function() {
-  showDemo('chain');
+  showDemo('clear');
 };
 
     </script>
 
+    <script src="demos/clear.js"></script>
     <script src="demos/rod.js"></script>
     <script src="demos/chain.js"></script>
     <script src="demos/lazy-tongs.js"></script>
