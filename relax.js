@@ -349,31 +349,26 @@ function Relax(canvas) {
   }
 
   function step() {
-    if (constraints.length > 0) {
-      updateCoordinateConstraints();
-      var count = 0;
-      var t0 = Date.now();
-      var t;
-      do {
-        count++;
-        movePointsToFingers();
-        points.forEach(function(point) {
-          point.clearDeltas();
-        });
-        constraints.forEach(function(constraint) {
-          constraint.addDeltas();
-        });
-        points.forEach(function(point) {
-          point.x += 0.25 / constraints.length * point.dx;
-          point.y += 0.25 / constraints.length * point.dy;
-        });
-        t = Date.now() - t0;
-      } while (t < 1000 / 65);
-      self.iterationsPerFrame = count;
-    } else {
+    updateCoordinateConstraints();
+    var count = 0;
+    var t0 = Date.now();
+    var t;
+    do {
+      count++;
       movePointsToFingers();
-      self.iterationsPerFrame = 0;
-    }
+      points.forEach(function(point) {
+        point.clearDeltas();
+      });
+      constraints.forEach(function(constraint) {
+        constraint.addDeltas();
+      });
+      points.forEach(function(point) {
+        point.x += 0.25 * point.dx;
+        point.y += 0.25 * point.dy;
+      });
+      t = Date.now() - t0;
+    } while (t < 1000 / 65);
+    self.iterationsPerFrame = count;
     redraw();
     requestAnimationFrame(step);
   }
