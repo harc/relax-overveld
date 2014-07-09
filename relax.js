@@ -410,6 +410,8 @@ function Relax(canvas) {
     });
   }
 
+  self.showEachIteration = false;
+
   function step() {
     updateCoordinateConstraints();
     var count = 0;
@@ -429,7 +431,7 @@ function Relax(canvas) {
         point.y += 0.25 * point.delta.y;
       });
       t = Date.now() - t0;
-    } while (t < 1000 / 65);
+    } while (!self.showEachIteration && constraints.length > 0 && t < 1000 / 65);
     self.iterationsPerFrame = count;
     redraw();
     requestAnimationFrame(step);

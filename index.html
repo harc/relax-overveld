@@ -28,16 +28,15 @@ actions {
   z-index: 2000;
 }
 
-demo, action, iterationsPerFrame {
+demo, action, iterationsPerFrame, showEachIterationButton {
   display: block;
-  padding: 3pt;
   margin: 10pt;
+  padding: 10pt 4pt;
   background: #eee;
   border: 1px solid #ddd;
   border-radius: 4pt;
   box-shadow: 4px 4px 6px 0px rgba(0, 0, 0, .4);
   -webkit-user-select: none;
-  padding: 10pt 4pt;
 }
 
 demo:hover, action:hover {
@@ -53,7 +52,22 @@ action:hover {
   background: #ccccee
 }
 
+showEachIterationButton {
+  padding: 4pt;
+  background: #eef;
+  position: absolute;
+  bottom: 20px;
+  left: 45%;
+  color: blue;
+}
+
+showEachIterationButton:hover {
+  background: #dde;
+  box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, .4);
+}
+
 iterationsPerFrame {
+  padding: 4pt;
   background: #f8f8f8;
   position: absolute;
   bottom: 20px;
@@ -63,6 +77,9 @@ iterationsPerFrame {
 
 iterationsPerFrame:after {
   content: ' iterations / frame';
+}
+
+#oneIterationPerFrame {
 }
 
     </style>
@@ -82,6 +99,7 @@ iterationsPerFrame:after {
       <action key='O'>O: orientation/4</action>
     </actions>
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
+    <showEachIterationButton id="sii"></showEachIterationButton>
     <script>
 
 var canvas = document.getElementById('canvas');
@@ -148,6 +166,16 @@ setInterval(
     },
     100
 );
+
+var sii = document.getElementById('sii');
+function updateSIILabel() {
+  sii.innerHTML = (relax.showEachIteration ? "don't " : '') + 'show each iteration';
+}
+sii.onclick = function() {
+  relax.showEachIteration = !relax.showEachIteration;
+  updateSIILabel();
+};
+updateSIILabel();
 
     </script>
   </body>
