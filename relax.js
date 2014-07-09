@@ -371,7 +371,9 @@ function Relax(canvas) {
     var m34 = this.p3.plus(this.p4).scaledBy(.5);
 
     var currTheta = a12 - a34;
-    var dTheta = (this.theta - currTheta) / 2;
+    var dTheta = this.theta - currTheta;
+    // TODO: figure out why setting dTheta to 1/2 times this value (as shown in the paper
+    // and seems to make sense) results in jumpy/unstable behavior.
 
     this.p1.addDelta(m12.plus(this.p1.minus(m12).rotatedBy(dTheta)).minus(this.p1));
     this.p2.addDelta(m12.plus(this.p2.minus(m12).rotatedBy(dTheta)).minus(this.p2));
