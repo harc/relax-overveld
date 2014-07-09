@@ -38,6 +38,13 @@ demo, action, iterationsPerFrame {
   -webkit-user-select: none;
 }
 
+/*
+action {
+  min-height: 50px;
+  margin-bottom: 15px;
+}
+*/
+
 demo:hover, action:hover {
   background: #ddd;
   box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, .4);
@@ -77,6 +84,7 @@ iterationsPerFrame:after {
       <action key='Q'>Q: equivalence/4</action>
       <action key='E'>E: eqdist/4</action>
       <action key='L'>L: length/2</action>
+      <action key='O'>O: orientation/4</action>
     </actions>
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
     <script>

@@ -1,15 +1,15 @@
 examples['lazy tongs'] = function() {
-  var p1  = relax.addPoint(100, 100, 'black');
-  var p2  = relax.addPoint(300, 100);
-  var p3  = relax.addPoint(500, 100);
-  var p4  = relax.addPoint(700, 100);
-  var p5  = relax.addPoint(200, 200);
-  var p6  = relax.addPoint(400, 200);
-  var p7  = relax.addPoint(600, 200);
-  var p8  = relax.addPoint(100, 300);
-  var p9  = relax.addPoint(300, 300);
-  var p10 = relax.addPoint(500, 300);
-  var p11 = relax.addPoint(700, 300);
+  var p1  = relax.addPoint(200, 100, 'black');
+  var p2  = relax.addPoint(400, 100);
+  var p3  = relax.addPoint(600, 100);
+  var p4  = relax.addPoint(800, 100);
+  var p5  = relax.addPoint(300, 200);
+  var p6  = relax.addPoint(500, 200);
+  var p7  = relax.addPoint(700, 200);
+  var p8  = relax.addPoint(200, 300);
+  var p9  = relax.addPoint(400, 300);
+  var p10 = relax.addPoint(600, 300);
+  var p11 = relax.addPoint(800, 300);
 
   relax.addLine(p1,  p9);
   relax.addLine(p9,  p3);
@@ -18,7 +18,7 @@ examples['lazy tongs'] = function() {
   relax.addLine(p2,  p10);
   relax.addLine(p10, p4);
 
-  relax.addCoordinateConstraint(p1, 100, 100);
+  relax.addCoordinateConstraint(p1, p1.clone());
 
   relax.addLengthConstraint(p1,  p5, 100 * Math.sqrt(2));
   relax.addLengthConstraint(p2,  p6, 100 * Math.sqrt(2));

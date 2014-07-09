@@ -20,18 +20,15 @@ function Relax(canvas) {
     return x * x;
   }
 
-  function dist(p1, p2) {
-    return Math.sqrt(square(p2.x - p1.x) + square(p2.y - p1.y));
-  }
-
   // ---------------------------
 
   var applyFns = {
-    F: function(p)              { self.addCoordinateConstraint(p, p.x, p.y); },
+    F: function(p)              { self.addCoordinateConstraint(p, p.clone()); },
     C: function(p1, p2)         { self.addCoincidenceConstraint(p1, p2); },
     Q: function(p1, p2, p3, p4) { self.addEquivalenceConstraint(p1, p2, p3, p4); },
     E: function(p1, p2, p3, p4) { self.addEqualDistanceConstraint(p1, p2, p3, p4); },
-    L: function(p1, p2)         { self.addLengthConstraint(p1, p2, dist(p1, p2)); }
+    L: function(p1, p2)         { self.addLengthConstraint(p1, p2, p2.minus(p1).magnitude()); },
+    O: function(p1, p2, p3, p4) { self.addOrientationConstraint(p1, p2, p3, p4); }
   };
 
   // ---------------------------
@@ -74,17 +71,57 @@ function Relax(canvas) {
     ctxt.stroke();
   };
 
+  Point.prototype.plus = function(that) {
+    return new Point(this.x + that.x, this.y + that.y);
+  };
+
+  Point.prototype.minus = function(that) {
+    return new Point(this.x - that.x, this.y - that.y);
+  };
+
+  Point.prototype.negated = function() {
+    return this.scaledBy(-1);
+  };
+
+  Point.prototype.clone = function() {
+    return this.scaledBy(1);
+  };
+
   Point.prototype.contains = function(x, y) {
     return square(this.radius) >= square(x - this.x) + square(y - this.y);
   };
 
-  Point.prototype.clearDeltas = function() {
-    this.dx = this.dy = 0;
+  Point.prototype.clearDelta = function() {
+    if (this.delta) {
+      this.delta.x = this.delta.y = 0;
+    } else {
+      this.delta = new Point(0, 0);
+    }
   };
 
-  Point.prototype.addDelta = function(dx, dy) {
-    this.dx += dx;
-    this.dy += dy;
+  Point.prototype.addDelta = function(d) {
+    this.delta.x += d.x;
+    this.delta.y += d.y;
+  };
+
+  // The following methods only make sense when the Point represents a vector.
+
+  Point.prototype.scaledBy = function(n) {
+    return new Point(this.x * n, this.y * n);
+  };
+
+  Point.prototype.magnitude = function() {
+    return Math.sqrt(square(this.x) + square(this.y));
+  };
+
+  Point.prototype.normalized = function() {
+    return this.scaledBy(1 / this.magnitude());
+  };
+
+  Point.prototype.rotatedBy = function(dTheta) {
+    var theta = Math.atan2(this.y, this.x) + dTheta;
+    var mag = this.magnitude();
+    return new Point(mag * Math.cos(theta), mag * Math.sin(theta));
   };
 
   // ---------------------------
@@ -243,14 +280,13 @@ function Relax(canvas) {
 
   // ---------------------------
 
-  function CoordinateConstraint(p, x, y) {
+  function CoordinateConstraint(p, c) {
     this.p = p;
-    this.x = x;
-    this.y = y;
+    this.c = c;
   }
 
   CoordinateConstraint.prototype.addDeltas = function() {
-    this.p.addDelta(this.x - this.p.x, this.y - this.p.y);
+    this.p.addDelta(this.c.minus(this.p));
   };
 
   function CoincidenceConstraint(p1, p2) {
@@ -259,10 +295,9 @@ function Relax(canvas) {
   }
 
   CoincidenceConstraint.prototype.addDeltas = function() {
-    var dx = (this.p2.x - this.p1.x) / 2;
-    var dy = (this.p2.y - this.p1.y) / 2;
-    this.p1.addDelta(dx, dy);
-    this.p2.addDelta(-dx, -dy);
+    var d = this.p2.minus(this.p1).scaledBy(0.5);
+    this.p1.addDelta(d);
+    this.p2.addDelta(d.negated());
   };
 
   function EquivalenceConstraint(p1, p2, p3, p4) {
@@ -273,15 +308,13 @@ function Relax(canvas) {
   }
 
   EquivalenceConstraint.prototype.addDeltas = function() {
-    var dx1 = (this.p2.x + this.p3.x - this.p4.x - this.p1.x) / 4;
-    var dy1 = (this.p2.y + this.p3.y - this.p4.y - this.p1.y) / 4;
-    this.p1.addDelta(dx1, dy1);
-    this.p4.addDelta(dx1, dy1);
+    var d1 = this.p2.plus(this.p3).minus(this.p4).minus(this.p1).scaledBy(0.25);
+    this.p1.addDelta(d1);
+    this.p4.addDelta(d1);
 
-    var dx2 = (this.p1.x + this.p4.x - this.p2.x - this.p3.x) / 4;
-    var dy2 = (this.p1.y + this.p4.y - this.p2.y - this.p3.y) / 4;
-    this.p2.addDelta(dx2, dy2);
-    this.p3.addDelta(dx2, dy2);
+    var d2 = this.p1.plus(this.p4).minus(this.p2).minus(this.p3).scaledBy(0.25);
+    this.p2.addDelta(d2);
+    this.p3.addDelta(d2);
   };
 
   function EqualDistanceConstraint(p1, p2, p3, p4) {
@@ -292,16 +325,16 @@ function Relax(canvas) {
   }
 
   EqualDistanceConstraint.prototype.addDeltas = function() {
-    var l12 = dist(this.p1, this.p2);
-    var l34 = dist(this.p3, this.p4);
+    var l12 = this.p1.minus(this.p2).magnitude();
+    var l34 = this.p3.minus(this.p4).magnitude();
     var delta = (l12 - l34) / 4;
-    var e12x = (this.p2.x - this.p1.x) / l12;
-    var e12y = (this.p2.y - this.p1.y) / l12;
+    var e12 = this.p2.minus(this.p1).normalized();
+    var e34 = this.p4.minus(this.p3).normalized();
 
-    this.p1.addDelta(delta * e12x, delta * e12y);
-    this.p4.addDelta(delta * e12x, delta * e12y);
-    this.p2.addDelta(-delta * e12x, -delta * e12y);
-    this.p3.addDelta(-delta * e12x, -delta * e12y);
+    this.p1.addDelta(e12.scaledBy(delta));
+    this.p2.addDelta(e12.scaledBy(-delta));
+    this.p3.addDelta(e34.scaledBy(-delta));
+    this.p4.addDelta(e34.scaledBy(delta));
   };
 
   function LengthConstraint(p1, p2, l) {
@@ -311,13 +344,40 @@ function Relax(canvas) {
   }
 
   LengthConstraint.prototype.addDeltas = function() {
-    var l12 = dist(this.p1, this.p2);
+    var l12 = this.p1.minus(this.p2).magnitude();
     var delta = (l12 - this.l) / 2;
-    var e12x = (this.p2.x - this.p1.x) / l12;
-    var e12y = (this.p2.y - this.p1.y) / l12;
+    var e12 = this.p2.minus(this.p1).normalized();
 
-    this.p1.addDelta(delta * e12x, delta * e12y);
-    this.p2.addDelta(-delta * e12x, -delta * e12y);
+    var d = e12.scaledBy(delta);
+    this.p1.addDelta(d);
+    this.p2.addDelta(d.negated());
+  };
+
+  function OrientationConstraint(p1, p2, p3, p4, theta) {
+    this.p1 = p1;
+    this.p2 = p2;
+    this.p3 = p3;
+    this.p4 = p4;
+    this.theta = theta;
+  }
+
+  OrientationConstraint.prototype.addDeltas = function() {
+    var v12 = this.p2.minus(this.p1);
+    var a12 = Math.atan2(v12.y, v12.x);
+    var m12 = this.p1.plus(this.p2).scaledBy(.5);
+
+    var v34 = this.p4.minus(this.p3);
+    var a34 = Math.atan2(v34.y, v34.x);
+    var m34 = this.p3.plus(this.p4).scaledBy(.5);
+
+    var currTheta = a12 - a34;
+    var dTheta = (this.theta - currTheta) / 2;
+
+    this.p1.addDelta(m12.plus(this.p1.minus(m12).rotatedBy(dTheta)).minus(this.p1));
+    this.p2.addDelta(m12.plus(this.p2.minus(m12).rotatedBy(dTheta)).minus(this.p2));
+
+    this.p3.addDelta(m34.plus(this.p3.minus(m34).rotatedBy(-dTheta)).minus(this.p3));
+    this.p4.addDelta(m34.plus(this.p4.minus(m34).rotatedBy(-dTheta)).minus(this.p4));
   };
 
   // ---------------------------
@@ -333,8 +393,8 @@ function Relax(canvas) {
       if (constraint instanceof CoordinateConstraint) {
         forEachFinger(function(finger) {
           if (finger.point === constraint.p) {
-            constraint.x = finger.x;
-            constraint.y = finger.y;
+            constraint.c.x = finger.x;
+            constraint.c.y = finger.y;
           }
         });
       }
@@ -357,14 +417,14 @@ function Relax(canvas) {
       count++;
       movePointsToFingers();
       points.forEach(function(point) {
-        point.clearDeltas();
+        point.clearDelta();
       });
       constraints.forEach(function(constraint) {
         constraint.addDeltas();
       });
       points.forEach(function(point) {
-        point.x += 0.25 * point.dx;
-        point.y += 0.25 * point.dy;
+        point.x += 0.25 * point.delta.x;
+        point.y += 0.25 * point.delta.y;
       });
       t = Date.now() - t0;
     } while (t < 1000 / 65);
@@ -395,8 +455,8 @@ function Relax(canvas) {
     return l;
   };
 
-  this.addCoordinateConstraint = function(p, x, y) {
-    var c = new CoordinateConstraint(p, x, y);
+  this.addCoordinateConstraint = function(p, c) {
+    var c = new CoordinateConstraint(p, c);
     constraints.push(c);
     return c;
   };
@@ -426,5 +486,30 @@ function Relax(canvas) {
       return c;
     }
   };
+
+  this.addOrientationConstraint = function(p1, p2, p3, p4) {
+    var v12 = p2.minus(p1);
+    var a12 = Math.atan2(v12.y, v12.x);
+    var v34 = p4.minus(p3);
+    var a34 = Math.atan2(v34.y, v34.x);
+    var theta = a12 - a34;
+    var c = new OrientationConstraint(p1, p2, p3, p4, theta);
+    constraints.push(c);
+    return c;
+  };
+
+/*
+  this.addParallelConstraint = function(p1, p2, p3, p4) {
+    var c = new OrientationConstraint(p1, p2, p3, p4, 0);
+    constraints.push(c);
+    return c;
+  };
+
+  this.addPerpendicularConstraint = function(p1, p2, p3, p4) {
+    var c = new OrientationConstraint(p1, p2, p3, p4, Math.PI / 2);
+    constraints.push(c);
+    return c;
+  };
+*/
 }
 
