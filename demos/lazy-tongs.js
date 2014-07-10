@@ -1,5 +1,5 @@
 examples['lazy tongs'] = function() {
-  var p1  = relax.addPoint(200, 100, 'black');
+  var p1  = relax.addPoint(200, 100);
   var p2  = relax.addPoint(400, 100);
   var p3  = relax.addPoint(600, 100);
   var p4  = relax.addPoint(800, 100);
