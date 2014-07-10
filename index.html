@@ -97,6 +97,7 @@ iterationsPerFrame:after {
       <action key='E'>E: eqdist/4</action>
       <action key='L'>L: length/2</action>
       <action key='O'>O: orientation/4</action>
+      <action key='M'>M: motor/2</action>
     </actions>
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
     <showEachIterationButton id="sii"></showEachIterationButton>
@@ -169,7 +170,7 @@ setInterval(
 
 var sii = document.getElementById('sii');
 function updateSIILabel() {
-  sii.innerHTML = (relax.showEachIteration ? "don't " : '') + 'show each iteration';
+  sii.innerHTML = (relax.showEachIteration ? '' : 'not') + ' showing each iteration';
 }
 sii.onclick = function() {
   relax.showEachIteration = !relax.showEachIteration;

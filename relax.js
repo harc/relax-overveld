@@ -28,7 +28,8 @@ function Relax(canvas) {
     Q: function(p1, p2, p3, p4) { self.addEquivalenceConstraint(p1, p2, p3, p4); },
     E: function(p1, p2, p3, p4) { self.addEqualDistanceConstraint(p1, p2, p3, p4); },
     L: function(p1, p2)         { self.addLengthConstraint(p1, p2, p2.minus(p1).magnitude()); },
-    O: function(p1, p2, p3, p4) { self.addOrientationConstraint(p1, p2, p3, p4); }
+    O: function(p1, p2, p3, p4) { self.addOrientationConstraint(p1, p2, p3, p4); },
+    M: function(p1, p2)         { self.addMotorConstraint(p1, p2, 1); }
   };
 
   // ---------------------------
@@ -364,11 +365,11 @@ function Relax(canvas) {
   OrientationConstraint.prototype.addDeltas = function() {
     var v12 = this.p2.minus(this.p1);
     var a12 = Math.atan2(v12.y, v12.x);
-    var m12 = this.p1.plus(this.p2).scaledBy(.5);
+    var m12 = this.p1.plus(this.p2).scaledBy(0.5);
 
     var v34 = this.p4.minus(this.p3);
     var a34 = Math.atan2(v34.y, v34.x);
-    var m34 = this.p3.plus(this.p4).scaledBy(.5);
+    var m34 = this.p3.plus(this.p4).scaledBy(0.5);
 
     var currTheta = a12 - a34;
     var dTheta = this.theta - currTheta;
@@ -382,6 +383,23 @@ function Relax(canvas) {
     this.p4.addDelta(m34.plus(this.p4.minus(m34).rotatedBy(-dTheta)).minus(this.p4));
   };
 
+  function MotorConstraint(p1, p2, w) {
+    this.p1 = p1;
+    this.p2 = p2;
+    this.w = w;
+    this.lastT = Date.now();
+  }
+
+  MotorConstraint.prototype.addDeltas = function() {
+    var now = Date.now();
+    var t = now - this.lastT;
+    var dTheta = t * this.w * 2 * Math.PI / 1000;
+    var m12 = this.p1.plus(this.p2).scaledBy(0.5);
+    this.p1.addDelta(m12.plus(this.p1.minus(m12).rotatedBy(dTheta)).minus(this.p1));
+    this.p2.addDelta(m12.plus(this.p2.minus(m12).rotatedBy(dTheta)).minus(this.p2));
+    this.lastT = now;
+  };
+    
   // ---------------------------
 
   function forEachFinger(fn) {
@@ -460,6 +478,7 @@ function Relax(canvas) {
   };
 
   this.addCoordinateConstraint = function(p, c) {
+p.color = 'black';
     var c = new CoordinateConstraint(p, c);
     constraints.push(c);
     return c;
@@ -515,5 +534,11 @@ function Relax(canvas) {
     return c;
   };
 */
+
+  this.addMotorConstraint = function(p1, p2, w) {
+    var c = new MotorConstraint(p1, p2, w);
+    constraints.push(c);
+    return c;
+  }
 }
 
