@@ -3,6 +3,10 @@ function Relax(canvas) {
   var self = this;
   var ctxt = canvas.getContext('2d');
   ctxt.font = '12px Arial';
+  ctxt.shadowOffsetX = 1;
+  ctxt.shadowOffsetY = 1;
+  ctxt.shadowColor = '#999';
+  ctxt.shadowBlur = 1;
 
   var points = [];
   var lines = [];
@@ -46,14 +50,11 @@ function Relax(canvas) {
   Point.prototype.radius = tablet ? 20 : 8;
 
   Point.prototype.draw = function(ctxt) {
-    ctxt.fillStyle = this.color;
-    ctxt.strokeStyle = this.isSelected ? 'yellow' : 'black';
-    ctxt.lineWidth = this.isSelected ? 4 : 1;
+    ctxt.fillStyle = this.isSelected ? 'yellow' : this.color;
     ctxt.beginPath();
     ctxt.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
     ctxt.closePath();
     ctxt.fill();
-    ctxt.stroke();
     if (this.selectionIndices.length > 0) {
       this.drawSelectionIndices();
     }
@@ -135,7 +136,7 @@ function Relax(canvas) {
   Line.prototype.draw = function(ctxt) {
     ctxt.beginPath();
     ctxt.moveTo(this.from.x, this.from.y);
-    ctxt.lineWidth = 1;
+    ctxt.lineWidth = 3;
     ctxt.strokeStyle = 'gray';
     ctxt.lineTo(this.to.x, this.to.y);
     ctxt.closePath();
@@ -143,6 +144,8 @@ function Relax(canvas) {
   };
 
   // ---------------------------
+
+  this.showConstraints = false;
 
   function redraw() {
     ctxt.fillStyle = 'white';
@@ -153,12 +156,20 @@ function Relax(canvas) {
     points.forEach(function(point) {
       point.draw(ctxt);
     });
+    if (self.showConstraints) {
+      constraints.forEach(function(constraint) {
+        if (constraint.draw) {
+          constraint.draw(ctxt);
+        }
+      });
+    }
   }
 
  
   this.keydown = function(k) {
     switch (k) {
-      case 'P': self.enterPointMode();  break;
+      case 'P': self.enterPointMode(); break;
+      case 'S': self.showConstraints = !self.showConstraints; break;
       default:
         if (applyFns[k] && applyFn !== applyFns[k]) {
           clearSelection();
@@ -352,6 +363,50 @@ function Relax(canvas) {
     var d = e12.scaledBy(delta);
     this.p1.addDelta(d);
     this.p2.addDelta(d.negated());
+  };
+
+  LengthConstraint.prototype.draw = function(ctxt) {
+    ctxt.lineWidth = 1;
+    ctxt.strokeStyle = 'yellow';
+    ctxt.beginPath();
+
+    var angle = Math.atan2(this.p2.y - this.p1.y, this.p2.x - this.p1.x);
+    var dist = 25;
+    var p1x = this.p1.x - dist * Math.cos(angle + Math.PI / 2);
+    var p1y = this.p1.y - dist * Math.sin(angle + Math.PI / 2);
+    var p2x = this.p2.x - dist * Math.cos(angle + Math.PI / 2);
+    var p2y = this.p2.y - dist * Math.sin(angle + Math.PI / 2);
+
+    var textCenterX = (p1x + p2x) / 2 - dist / 2 * Math.cos(angle + Math.PI / 2);
+    var textCenterY = (p1y + p2y) / 2 - dist / 2 * Math.sin(angle + Math.PI / 2);
+
+    ctxt.moveTo(
+      p1x + 5 * Math.cos(angle + Math.PI / 2),
+      p1y + 5 * Math.sin(angle + Math.PI / 2)
+    );
+    ctxt.lineTo(
+      p1x - 5 * Math.cos(angle + Math.PI / 2),
+      p1y - 5 * Math.sin(angle + Math.PI / 2)
+    );
+
+    ctxt.moveTo(p1x, p1y);
+    ctxt.lineTo(p2x, p2y);
+
+    ctxt.moveTo(
+      p2x + 5 * Math.cos(angle + Math.PI / 2),
+      p2y + 5 * Math.sin(angle + Math.PI / 2)
+    );
+    ctxt.lineTo(
+      p2x - 5 * Math.cos(angle + Math.PI / 2),
+      p2y - 5 * Math.sin(angle + Math.PI / 2)
+    );
+    ctxt.closePath();
+    ctxt.stroke();
+
+    ctxt.textAlign = 'center';
+    ctxt.textBaseline = 'middle';
+    ctxt.strokeText(Math.round(this.l), textCenterX, textCenterY);
+    ctxt.stroke();
   };
 
   function OrientationConstraint(p1, p2, p3, p4, theta) {
