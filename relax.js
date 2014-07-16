@@ -33,6 +33,8 @@ function Relax(canvas) {
     E: function(p1, p2, p3, p4) { self.addEqualDistanceConstraint(p1, p2, p3, p4); },
     L: function(p1, p2)         { self.addLengthConstraint(p1, p2, p2.minus(p1).magnitude()); },
     O: function(p1, p2, p3, p4) { self.addOrientationConstraint(p1, p2, p3, p4); },
+    R: function(p1, p2, p3, p4) { self.addParallelConstraint(p1, p2, p3, p4); },
+    N: function(p1, p2, p3, p4) { self.addPerpendicularConstraint(p1, p2, p3, p4); },
     M: function(p1, p2)         { self.addMotorConstraint(p1, p2, 1); }
   };
 
@@ -566,29 +568,41 @@ p.color = 'black';
   };
 
   this.addOrientationConstraint = function(p1, p2, p3, p4) {
-    var v12 = p2.minus(p1);
-    var a12 = Math.atan2(v12.y, v12.x);
-    var v34 = p4.minus(p3);
-    var a34 = Math.atan2(v34.y, v34.x);
-    var theta = a12 - a34;
-    var c = new OrientationConstraint(p1, p2, p3, p4, theta);
+    var c = new OrientationConstraint(p1, p2, p3, p4, calculateAngle(p1, p2, p3, p4));
     constraints.push(c);
     return c;
   };
 
-/*
+  function calculateAngle(p1, p2, p3, p4) {
+    var v12 = p2.minus(p1);
+    var a12 = Math.atan2(v12.y, v12.x);
+    var v34 = p4.minus(p3);
+    var a34 = Math.atan2(v34.y, v34.x);
+    return (a12 - a34 + 2 * Math.PI) % (2 * Math.PI);
+  }
+
   this.addParallelConstraint = function(p1, p2, p3, p4) {
+    var angle = calculateAngle(p1, p2, p3, p4);
+    if (Math.PI / 2 < angle && angle < 3 * Math.PI / 2) {
+      var temp = p3;
+      p3 = p4;
+      p4 = temp;
+    }
     var c = new OrientationConstraint(p1, p2, p3, p4, 0);
     constraints.push(c);
     return c;
   };
 
   this.addPerpendicularConstraint = function(p1, p2, p3, p4) {
+    if (calculateAngle(p1, p2, p3, p4) > Math.PI) {
+      var temp = p3;
+      p3 = p4;
+      p4 = temp;
+    }
     var c = new OrientationConstraint(p1, p2, p3, p4, Math.PI / 2);
     constraints.push(c);
     return c;
   };
-*/
 
   this.addMotorConstraint = function(p1, p2, w) {
     var c = new MotorConstraint(p1, p2, w);
