@@ -91,6 +91,7 @@ iterationsPerFrame:after {
     <demos id="demos"></demos>
     <actions id="actions">
       <action key='P'>P: point</action>
+      <action key='D'>D: delete</action>
       <action key='F'>F: coordinate/1</action>
       <action key='C'>C: coincidence/2</action>
       <action key='Q'>Q: equivalence/4</action>
@@ -131,6 +132,13 @@ for (var idx = 0; idx < actions.length; idx++) {
   );
   action.addEventListener(
       'pointerup',
+      function(e) {
+        relax.keyup(this.getAttribute('key'));
+      },
+      false
+  );
+  action.addEventListener(
+      'pointerout',
       function(e) {
         relax.keyup(this.getAttribute('key'));
       },

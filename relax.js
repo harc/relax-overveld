@@ -17,6 +17,8 @@ function Relax(canvas) {
   var pointMode = false;
   var lastPoint;
 
+  var deleteMode = false;
+
   var applyFn;
   var selection = [];
 
@@ -135,6 +137,10 @@ function Relax(canvas) {
     this.to = to;
   }
 
+  Line.prototype.involvesPoint = function(p) {
+    return this.from === p || this.to === p;
+  };
+
   Line.prototype.draw = function(ctxt) {
     ctxt.beginPath();
     ctxt.moveTo(this.from.x, this.from.y);
@@ -170,7 +176,8 @@ function Relax(canvas) {
  
   this.keydown = function(k) {
     switch (k) {
-      case 'P': self.enterPointMode(); break;
+      case 'P': self.enterPointMode();  break;
+      case 'D': self.enterDeleteMode(); break;
       case 'S': self.showConstraints = !self.showConstraints; break;
       default:
         if (applyFns[k] && applyFn !== applyFns[k]) {
@@ -191,6 +198,7 @@ function Relax(canvas) {
   this.keyup = function(k) {
     switch (k) {
       case 'P': self.exitPointMode();  break;
+      case 'D': self.exitDeleteMode(); break;
       default:
         if (applyFn === applyFns[k]) {
           clearSelection();
@@ -220,23 +228,27 @@ function Relax(canvas) {
           }
         }
         if (point) {
-          points.splice(pointIdx, 1);
-          points.push(point);
-          fingers[e.pointerId] = {x: e.clientX, y: e.clientY, point: point};
-          point.isSelected = true;
-          if (pointMode) {
-            var oldLastPoint = lastPoint;
-            lastPoint = point;
-            if (oldLastPoint && oldLastPoint !== lastPoint) {
-              self.addLine(oldLastPoint, lastPoint);
+          if (deleteMode) {
+            self.deletePoint(point);
+          } else {
+            points.splice(pointIdx, 1);
+            points.push(point);
+            fingers[e.pointerId] = {x: e.clientX, y: e.clientY, point: point};
+            point.isSelected = true;
+            if (pointMode) {
+              var oldLastPoint = lastPoint;
+              lastPoint = point;
+              if (oldLastPoint && oldLastPoint !== lastPoint) {
+                self.addLine(oldLastPoint, lastPoint);
+              }
             }
-          }
-          if (applyFn) {
-            var selectionIndex = selection.push(point);
-            point.selectionIndices.push(selectionIndex);
-            if (selection.length === applyFn.length) {
-              applyFn.apply(undefined, selection);
+            if (applyFn) {
+              var selectionIndex = selection.push(point);
+              point.selectionIndices.push(selectionIndex);
+              if (selection.length === applyFn.length) {
+                applyFn.apply(undefined, selection);
               clearSelection();
+              }
             }
           }
         } else {
@@ -285,6 +297,14 @@ function Relax(canvas) {
     lastPoint = undefined;
   };
 
+  this.enterDeleteMode = function() {
+    deleteMode = true;
+  };
+
+  this.exitDeleteMode = function() {
+    deleteMode = false;
+  };
+
   function clearSelection() {
     selection = [];
     points.forEach(function(point) {
@@ -294,10 +314,23 @@ function Relax(canvas) {
 
   // ---------------------------
 
+  function Constraint() {}
+  Constraint.prototype.involvesPoint = function(p) {
+    var self = this;
+    var ans = false;
+    Object.keys(this).forEach(function(propertyName) {
+      if (self[propertyName] === p) {
+        ans = true;
+      }
+    });
+    return ans;
+  };
+
   function CoordinateConstraint(p, c) {
     this.p = p;
     this.c = c;
   }
+  CoordinateConstraint.prototype = new Constraint();
 
   CoordinateConstraint.prototype.addDeltas = function() {
     this.p.addDelta(this.c.minus(this.p));
@@ -307,6 +340,7 @@ function Relax(canvas) {
     this.p1 = p1;
     this.p2 = p2;
   }
+  CoincidenceConstraint.prototype = new Constraint();
 
   CoincidenceConstraint.prototype.addDeltas = function() {
     var d = this.p2.minus(this.p1).scaledBy(0.5);
@@ -320,6 +354,7 @@ function Relax(canvas) {
     this.p3 = p3;
     this.p4 = p4;
   }
+  EquivalenceConstraint.prototype = new Constraint();
 
   EquivalenceConstraint.prototype.addDeltas = function() {
     var d1 = this.p2.plus(this.p3).minus(this.p4).minus(this.p1).scaledBy(0.25);
@@ -337,6 +372,7 @@ function Relax(canvas) {
     this.p3 = p3;
     this.p4 = p4;
   }
+  EqualDistanceConstraint.prototype = new Constraint();
 
   EqualDistanceConstraint.prototype.addDeltas = function() {
     var l12 = this.p1.minus(this.p2).magnitude();
@@ -356,6 +392,7 @@ function Relax(canvas) {
     this.p2 = p2;
     this.l = l;
   }
+  LengthConstraint.prototype = new Constraint();
 
   LengthConstraint.prototype.addDeltas = function() {
     var l12 = this.p1.minus(this.p2).magnitude();
@@ -418,6 +455,7 @@ function Relax(canvas) {
     this.p4 = p4;
     this.theta = theta;
   }
+  OrientationConstraint.prototype = new Constraint();
 
   OrientationConstraint.prototype.addDeltas = function() {
     var v12 = this.p2.minus(this.p1);
@@ -446,6 +484,7 @@ function Relax(canvas) {
     this.w = w;
     this.lastT = Date.now();
   }
+  MotorConstraint.prototype = new Constraint();
 
   MotorConstraint.prototype.addDeltas = function() {
     var now = Date.now();
@@ -487,6 +526,8 @@ function Relax(canvas) {
 
   self.showEachIteration = false;
 
+  self.rho = 0.25;
+
   function step() {
     updateCoordinateConstraints();
     var count = 0;
@@ -502,8 +543,8 @@ function Relax(canvas) {
         constraint.addDeltas();
       });
       points.forEach(function(point) {
-        point.x += 0.25 * point.delta.x;
-        point.y += 0.25 * point.delta.y;
+        point.x += self.rho * point.delta.x;
+        point.y += self.rho * point.delta.y;
       });
       t = Date.now() - t0;
     } while (!self.showEachIteration && constraints.length > 0 && t < 1000 / 65);
@@ -528,6 +569,12 @@ function Relax(canvas) {
     return p;
   };
 
+  this.deletePoint = function(p) {
+    points = points.filter(function(point) { return point !== p; });
+    constraints = constraints.filter(function(constraint) { return !constraint.involvesPoint(p); });
+    lines = lines.filter(function(lines) { return !lines.involvesPoint(p); });
+  };
+
   this.addLine = function(p1, p2) {
     var l = new Line(p1, p2);
     lines.push(l);
@@ -535,7 +582,9 @@ function Relax(canvas) {
   };
 
   this.addCoordinateConstraint = function(p, c) {
-p.color = 'black';
+    // TODO: remove this hack once visualizations are done.
+    p.color = 'black';
+
     var c = new CoordinateConstraint(p, c);
     constraints.push(c);
     return c;
