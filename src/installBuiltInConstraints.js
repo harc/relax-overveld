@@ -137,8 +137,7 @@ function installBuiltInConstraints(Relax) {
         this.lastT = Date.now();
       },
 
-      function() {
-        var now = Date.now();
+      function(now) {
         var t = now - this.lastT;
         var dTheta = t * this.w * 2 * Math.PI / 1000;
         var m12 = this.p1.plus(this.p2).scaledBy(0.5);

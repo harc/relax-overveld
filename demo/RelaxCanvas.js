@@ -11,7 +11,7 @@ Line.prototype.involvesPoint = function(p) {
 
 function RelaxCanvas(relax, canvas) {
   this.relax = relax;
-  this.pointRadius = 8;
+  this.initPointRadius();
   this.initCanvas(canvas);
   this.showConstraints = false;
   this.showEachIteration = false;
@@ -42,7 +42,15 @@ function RelaxCanvas(relax, canvas) {
   };
   this.applyFn = undefined;
   this.selection = [];
+
+  this.relax.beforeEachIteration = this.movePointsToFingers.bind(this);
 }
+
+RelaxCanvas.prototype.initPointRadius = function() {
+  var tablet = navigator.userAgent.match(/iPad/i) !== null ||
+               navigator.userAgent.match(/Android/i) !== null;
+  this.pointRadius = tablet ? 20 : 8;
+};
 
 RelaxCanvas.prototype.initCanvas = function(canvas) {
 
@@ -198,23 +206,36 @@ RelaxCanvas.prototype.movePointsToFingers = function() {
   });
 };
 
+RelaxCanvas.prototype.updateCoordinateConstraints = function() {
+  var self = this;
+  var CoordinateConstraint = Relax.getConstraintType('coordinate');
+  this.relax.constraints.forEach(function(constraint) {
+    if (constraint instanceof CoordinateConstraint) {
+      self.forEachFinger(function(finger) {
+        if (finger.point === constraint.p) {
+          constraint.c.x = finger.x;
+          constraint.c.y = finger.y;
+        }
+      });
+    }
+  });
+};
+
 RelaxCanvas.prototype.step = function() {
-  var numIterations = 0;
-  this.movePointsToFingers();
-  if (!this.paused && this.relax.constraints.length > 0) {
-    var t0 = Date.now();
-    var t;
-    do {
-      this.movePointsToFingers();
+  this.updateCoordinateConstraints();
+  if (!this.paused) {
+    if (this.showEachIteration) {
       this.relax.doOneIteration();
-      numIterations++;
-      t = Date.now() - t0;
-    } while(!this.showEachIteration && t < 1000 / 65);
+      this.iterationsPerFrame = 1;
+    } else {
+      this.iterationsPerFrame = this.relax.iterateForUpToMillis(1000 / 65);
+    }
+  } else {
+    this.movePointsToFingers();
   }
-  this.iterationsPerFrame = numIterations;
   this.redraw();
   requestAnimationFrame(this.stepFn);
-};
+}
 
 RelaxCanvas.prototype.pause = function() {
   this.paused = true;

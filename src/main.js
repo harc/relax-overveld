@@ -12,8 +12,7 @@ var installBuiltInConstraints = require('./installBuiltInConstraints.js');
 
 function Relax() {
   this.rho = 0.25;
-  this.paused = false;
-  this.oneIterationPerFrame = false;
+  this.epsilon = 0.001;
   this.points = [];
   this.constraints = [];
 }
@@ -68,14 +67,41 @@ Relax.prototype.removeConstraint = function(unwanted) {
   this.constraints = this.constraints.filter(function(c) { return c !== unwanted; });
 };
 
-Relax.prototype.doOneIteration = function() {
+Relax.prototype.doOneIteration = function(t) {
+  if (this.beforeEachIteration) {
+    (this.beforeEachIteration)();
+  }
+
   var self = this;
   this.points.forEach(function(p) { p.clearDelta(); });
-  this.constraints.forEach(function(c) { c.addDeltas(); });
+  this.constraints.forEach(function(c) { c.addDeltas(t); });
+  var didSomething = false;
   this.points.forEach(function(p) {
-    p.x += self.rho * p.delta.x;
-    p.y += self.rho * p.delta.y;
+    didSomething |= p.delta.x > self.epsilon || p.delta.y > self.epsilon;
   });
+  if (didSomething) {
+    this.points.forEach(function(p) {
+      p.x += self.rho * p.delta.x;
+      p.y += self.rho * p.delta.y;
+    });
+    return true;
+  } else {
+    return false;
+  }
+};
+
+Relax.prototype.iterateForUpToMillis = function(tMillis) {
+  var count = 0;
+  var now, t0, t;
+  var didSomething;
+  now = t0 = Date.now();
+  do {
+    didSomething = this.doOneIteration(now);
+    now = Date.now();
+    t = now - t0;
+    count++;
+  } while (didSomething && t < tMillis);
+  return count;
 };
 
 // --------------------------------------------------------------------
