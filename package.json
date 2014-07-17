@@ -1,0 +1,29 @@
+{
+  "name": "relax",
+  "version": "0.0.0",
+  "description": "an implementation of Overveld's relaxation of geometric constraints",
+  "keywords": [
+    "relaxation",
+    "constraints",
+    "geometric constraints"
+  ],
+  "homepage": "http://tinlizzie.org/relax",
+  "bugs": "http://github.com/alexwarth/relax/issues",
+  "main": "src/main.js",
+  "scripts": {
+    "clean": "rm -f dist/relax.js dist/relax.min.js",
+    "build-debug": "browserify src/main.js -d -s Relax -o dist/relax.js",
+    "build-min": "browserify src/main.js -s Relax -o dist/_relax.js && uglifyjs dist/_relax.js -o dist/relax.min.js && rm dist/_relax.js",
+    "build": "npm run build-debug && npm run build-min",
+    "watch": "watchify src/main.js -d -s Relax -o dist/relax.js",
+    "prepublish": "npm run build"
+  },
+  "license": "MIT",
+  "author": "Alex Warth <alexwarth@gmail.com> (http://tinlizzie.org/~awarth)",
+  "devDependencies": {
+    "watchify": "^0.6.1",
+    "uglify-js": "^2.4.12",
+    "browserify": "^3.30.4",
+    "mocha": "^1.17.1"
+  }
+}

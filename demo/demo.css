@@ -1,0 +1,75 @@
+body {
+  font-family: "PT Sans", Arial, Helvetica, sans-serif;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+demos {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+}
+
+actions {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 2000;
+}
+
+demo, action, iterationsPerFrame, showEachIterationButton {
+  display: block;
+  margin: 10pt;
+  padding: 10pt 4pt;
+  background: #eee;
+  border: 1px solid #ddd;
+  border-radius: 4pt;
+  box-shadow: 4px 4px 6px 0px rgba(0, 0, 0, .4);
+  -webkit-user-select: none;
+}
+
+demo:hover, action:hover {
+  background: #ddd;
+  box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, .4);
+}
+
+action {
+  background: #ccccff;
+}
+
+action:hover {
+  background: #ccccee
+}
+
+showEachIterationButton {
+  padding: 4pt;
+  background: #eef;
+  position: absolute;
+  bottom: 20px;
+  left: 45%;
+  color: blue;
+}
+
+showEachIterationButton:hover {
+  background: #dde;
+  box-shadow: 2px 2px 2px 0px rgba(0, 0, 0, .4);
+}
+
+iterationsPerFrame {
+  padding: 4pt;
+  background: #f8f8f8;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  color: blue;
+}
+
+iterationsPerFrame:after {
+  content: ' iterations / frame';
+}
+
