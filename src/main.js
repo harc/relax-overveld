@@ -12,7 +12,7 @@ var installBuiltInConstraints = require('./installBuiltInConstraints.js');
 
 function Relax() {
   this.rho = 0.25;
-  this.epsilon = 0.001;
+  this.epsilon = 0.01;
   this.points = [];
   this.constraints = [];
 }
@@ -93,14 +93,17 @@ Relax.prototype.doOneIteration = function(t) {
 Relax.prototype.iterateForUpToMillis = function(tMillis) {
   var count = 0;
   var now, t0, t;
-  var didSomething;
+  var didSomething = true;
   now = t0 = Date.now();
-  do {
+  t = 0;
+  while (t < tMillis && didSomething) {
     didSomething = this.doOneIteration(now);
     now = Date.now();
     t = now - t0;
-    count++;
-  } while (didSomething && t < tMillis);
+    if (didSomething) {
+      count++;
+    }
+  }
   return count;
 };
 

@@ -225,8 +225,7 @@ RelaxCanvas.prototype.step = function() {
   this.updateCoordinateConstraints();
   if (!this.paused) {
     if (this.showEachIteration) {
-      this.relax.doOneIteration();
-      this.iterationsPerFrame = 1;
+      this.iterationsPerFrame = this.relax.doOneIteration() ? 1 : 0;
     } else {
       this.iterationsPerFrame = this.relax.iterateForUpToMillis(1000 / 65);
     }
