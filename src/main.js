@@ -73,11 +73,11 @@ Relax.prototype.doOneIteration = function(t) {
   }
 
   var self = this;
+  var didSomething = false;
   this.points.forEach(function(p) { p.clearDelta(); });
   this.constraints.forEach(function(c) { c.addDeltas(t); });
-  var didSomething = false;
   this.points.forEach(function(p) {
-    didSomething |= p.delta.x > self.epsilon || p.delta.y > self.epsilon;
+    didSomething = didSomething || Math.abs(p.delta.x) > self.epsilon || Math.abs(p.delta.y) > self.epsilon
   });
   if (didSomething) {
     this.points.forEach(function(p) {
@@ -92,18 +92,15 @@ Relax.prototype.doOneIteration = function(t) {
 
 Relax.prototype.iterateForUpToMillis = function(tMillis) {
   var count = 0;
+  var didSomething;
   var now, t0, t;
-  var didSomething = true;
   now = t0 = Date.now();
-  t = 0;
-  while (t < tMillis && didSomething) {
+  do {
     didSomething = this.doOneIteration(now);
     now = Date.now();
     t = now - t0;
-    if (didSomething) {
-      count++;
-    }
-  }
+    count += didSomething ? 1 : 0;
+  } while (didSomething && t < tMillis);
   return count;
 };
 
