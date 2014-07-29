@@ -2,92 +2,56 @@
 // Imports
 // --------------------------------------------------------------------
 
-var Point = require('./Point.js');
-var Constraint = require('./Constraint.js');
-var installBuiltInConstraints = require('./installBuiltInConstraints.js');
+var Delta = require('./Delta.js');
+var installArithmeticConstraints = require('./arithmetic-constraints.js');
+var installGeometricConstraints = require('./geometric-constraints.js');
 
 // --------------------------------------------------------------------
-// Meat
+// Public
 // --------------------------------------------------------------------
 
 function Relax() {
   this.rho = 0.25;
   this.epsilon = 0.01;
-  this.points = [];
-  this.constraints = [];
+  this.things = [];
 }
 
-// --------------------------------------------------------------------
-
-var constraintTypes = {};
-
-Relax.declareConstraintType = function(name, ctor, addDeltasFn) {
-  constraintTypes[name] = ctor;
-  ctor.prototype = new Constraint();
-  ctor.prototype.addDeltas = addDeltasFn;
-}
-
-Relax.getConstraintType = function(name) {
-  if (constraintTypes[name]) {
-    return constraintTypes[name];
-  } else {
-    throw 'unknown constraint type ' + name;
-  }
+Relax.makeDeltaFor = function(obj) {
+  return new Delta(obj);
 };
 
-installBuiltInConstraints(Relax);
-
-// --------------------------------------------------------------------
-
-Relax.prototype.addPoint = function(x, y) {
-  var p = new Point(x, y);
-  this.points.push(p);
-  return p;
+Relax.prototype.add = function(thing) {
+  this.things.push(thing);
 };
 
-Relax.prototype.removePoint = function(unwanted) {
-  this.points = this.points.filter(function(p) { return p !== unwanted; });
-  this.constraints = this.constraints.filter(function(c) { return !c.involvesPoint(unwanted); });
+Relax.prototype.remove = function(unwantedThing) {
+  var self = this;
+  this.things = this.things.filter(function(thing) {
+    return thing !== unwantedThing &&
+           !(isConstraint(thing) && involves(thing, unwantedThing));
+  });
 };
 
-Relax.prototype.addConstraint = function(type /* arg1, arg2, ... */) {
-  var ctor = Relax.getConstraintType(type);
-  var args = Array.prototype.slice.call(arguments);
-  if (args.length - 1 !== ctor.length) {
-    throw ['wrong number of arguments to ', type, ' constructor ',
-           '(expected ', ctor.length, ' but got ', args.length - 1, ')'].join('');
-  }
-  var noArgCtor = ctor.bind.apply(ctor, args);
-  var c = new noArgCtor();
-  this.constraints.push(c);
-  return c;
-};
-
-Relax.prototype.removeConstraint = function(unwanted) {
-  this.constraints = this.constraints.filter(function(c) { return c !== unwanted; });
-};
-
-Relax.prototype.doOneIteration = function(t) {
+Relax.prototype.doOneIteration = function(timeMillis) {
   if (this.beforeEachIteration) {
     (this.beforeEachIteration)();
   }
-
   var self = this;
   var didSomething = false;
-  this.points.forEach(function(p) { p.clearDelta(); });
-  this.constraints.forEach(function(c) { c.addDeltas(t); });
-  this.points.forEach(function(p) {
-    didSomething = didSomething || Math.abs(p.delta.x) > self.epsilon || Math.abs(p.delta.y) > self.epsilon
+  this.things.forEach(function(c) {
+    if (isConstraint(c)) {
+      c.computeDeltas(timeMillis);
+      didSomething = didSomething || hasSignificantDeltas(self, c);
+    }
   });
   if (didSomething) {
-    this.points.forEach(function(p) {
-      p.x += self.rho * p.delta.x;
-      p.y += self.rho * p.delta.y;
+    this.things.forEach(function(c) {
+      if (isConstraint(c)) {
+        applyDeltas(self, c);
+      }
     });
-    return true;
-  } else {
-    return false;
   }
+  return didSomething;
 };
 
 Relax.prototype.iterateForUpToMillis = function(tMillis) {
@@ -103,6 +67,50 @@ Relax.prototype.iterateForUpToMillis = function(tMillis) {
   } while (didSomething && t < tMillis);
   return count;
 };
+
+// --------------------------------------------------------------------
+// Private
+// --------------------------------------------------------------------
+
+function isConstraint(thing) {
+  return thing.computeDeltas !== undefined;
+};
+
+function hasSignificantDeltas(relax, constraint) {
+  for (var p in constraint) {
+    var d = constraint[p];
+    if (d instanceof Delta && d.isSignificant(relax.epsilon)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+function applyDeltas(relax, constraint) {
+  for (var p in constraint) {
+    var d = constraint[p];
+    if (d instanceof Delta) {
+      d.apply(relax.rho);
+    }
+  }
+};
+
+function involves(constraint, obj) {
+  for (var p in constraint) {
+    var d = constraint[p];
+    if (d instanceof Delta && d._obj === obj) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// --------------------------------------------------------------------
+// Install constraint libraries
+// --------------------------------------------------------------------
+
+installArithmeticConstraints(Relax);
+installGeometricConstraints(Relax);
 
 // --------------------------------------------------------------------
 // Exports

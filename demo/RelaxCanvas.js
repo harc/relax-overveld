@@ -17,6 +17,7 @@ function RelaxCanvas(relax, canvas) {
   this.showEachIteration = false;
   this.iterationsPerFrame = 0;
   this.paused = false;
+  this.points = [];
   this.lines = [];
   this.stepFn = this.step.bind(this);
   this.step();
@@ -120,7 +121,7 @@ RelaxCanvas.prototype.exitDeleteMode = function() {
 
 RelaxCanvas.prototype.clearSelection = function() {
   this.selection = [];
-  this.relax.points.forEach(function(p) {
+  this.relax.things.forEach(function(p) {
     p.selectionIndices = [];
   });
 };
@@ -136,7 +137,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
   var pointIdx;
-  this.relax.points.forEach(function(p, idx) {
+  this.relax.things.forEach(function(p, idx) {
     if (self.pointContains(p, e.clientX, e.clientY)) {
       point = p;
       pointIdx = idx;
@@ -146,8 +147,8 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     if (this.deleteMode) {
       this.removePoint(point);
     } else {
-      this.relax.points.splice(pointIdx, 1);
-      this.relax.points.push(point);
+      this.relax.things.splice(pointIdx, 1);
+      this.relax.things.push(point);
       this.fingers[e.pointerId] = {x: e.clientX, y: e.clientY, point: point};
       point.isSelected = true;
       if (this.pointMode) {
@@ -208,9 +209,8 @@ RelaxCanvas.prototype.movePointsToFingers = function() {
 
 RelaxCanvas.prototype.updateCoordinateConstraints = function() {
   var self = this;
-  var CoordinateConstraint = Relax.getConstraintType('coordinate');
-  this.relax.constraints.forEach(function(constraint) {
-    if (constraint instanceof CoordinateConstraint) {
+  this.relax.things.forEach(function(constraint) {
+    if (constraint instanceof Relax.geom.CoordinateConstraint) {
       self.forEachFinger(function(finger) {
         if (finger.point === constraint.p) {
           constraint.c.x = finger.x;
@@ -281,7 +281,7 @@ RelaxCanvas.prototype.drawLine = function(l) {
   this.ctxt.stroke();
 };
 
-Relax.getConstraintType('length').prototype.draw = function(ctxt) {
+Relax.geom.LengthConstraint.prototype.draw = function(ctxt) {
   ctxt.lineWidth = 1;
   ctxt.strokeStyle = 'yellow';
   ctxt.beginPath();
@@ -330,18 +330,18 @@ RelaxCanvas.prototype.redraw = function() {
   this.ctxt.fillStyle = 'white';
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
   this.lines.forEach(function(l) { self.drawLine(l); });
-  this.relax.points.forEach(function(p) { self.drawPoint(p); });
+  this.relax.things.forEach(function(p) { self.drawPoint(p); });
   if (this.showConstraints) {
-    this.relax.constraints.forEach(function(c) { if (c.draw) { c.draw(self.ctxt); } });
+    this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt); } });
   }
 };
 
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.addPoint = function(x, y, optColor) {
-  var p = this.relax.addPoint(x, y);
-  p.color = optColor || 'slateblue';
-  p.selectionIndices = [];
+  var p = {x: x, y: y, color: optColor || 'slateBlue', selectionIndices: []};
+  this.points.push(p);
+  this.relax.add(p);
   return p;
 };
 
@@ -353,15 +353,15 @@ RelaxCanvas.prototype.addLine = function(p1, p2) {
 
 RelaxCanvas.prototype.addCoordinateConstraint = function(p, x, y) {
   p.color = 'black';
-  return this.relax.addConstraint('coordinate', p, x, y);
+  return this.relax.add(new Relax.geom.CoordinateConstraint(p, x, y));
 };
 
 RelaxCanvas.prototype.addCoincidenceConstraint = function(p1, p2) {
-  return this.relax.addConstraint('coincidence', p1, p2);
+  return this.relax.add(new Relax.geom.CoincidenceConstraint(p1, p2));
 };
 
 RelaxCanvas.prototype.addEquivalenceConstraint = function(p1, p2, p3, p4) {
-  return this.relax.addConstraint('equivalence', p1, p2, p3, p4);
+  return this.relax.add(new Relax.geom.EquivalenceConstraint(p1, p2, p3, p4));
 };
 
 RelaxCanvas.prototype.addEqualDistanceConstraint = function(p1, p2, p3, p4) {
@@ -373,9 +373,9 @@ RelaxCanvas.prototype.addLengthConstraint = function(p1, p2, l) {
 };
 
 RelaxCanvas.prototype.calculateAngle = function(p1, p2, p3, p4) {
-  var v12 = p2.minus(p1);
+  var v12 = {x: p2.x - p1.x, y: p2.y - p1.y};
   var a12 = Math.atan2(v12.y, v12.x);
-  var v34 = p4.minus(p3);
+  var v34 = {x: p4.x - p3.x, y: p4.y - p3.y};
   var a34 = Math.atan2(v34.y, v34.x);
   return (a12 - a34 + 2 * Math.PI) % (2 * Math.PI);
 };
@@ -410,7 +410,8 @@ RelaxCanvas.prototype.addMotorConstraint = function(p1, p2, w) {
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.removePoint = function(unwanted) {
-  this.relax.removePoint(unwanted);
+  this.relax.remove(unwanted);
+  this.points = this.points.filter(function(p) { return p !== unwanted; });
   this.lines = this.lines.filter(function(l) { return !l.involvesPoint(unwanted); });
 };
 
@@ -424,8 +425,6 @@ RelaxCanvas.prototype.removeConstraint = function(unwanted) {
 
 RelaxCanvas.prototype.clear = function() {
   var self = this;
-  this.relax.points.forEach(function(p) { self.removePoint(p); });
-  this.relax.constraints.forEach(function(c) { self.removeConstraint(c); });
-  this.lines.forEach(function(l) { self.removeLine(l); });
+  this.points.forEach(function(p) { self.removePoint(p); });
 };
 

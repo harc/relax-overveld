@@ -1,10 +1,11 @@
 {
   "name": "relax",
   "version": "0.0.0",
-  "description": "an implementation of Overveld's relaxation of geometric constraints",
+  "description": "an implementation of van Overveld's relaxation algorithm",
   "keywords": [
     "relaxation",
     "constraints",
+    "arithmetic constraints",
     "geometric constraints"
   ],
   "homepage": "http://tinlizzie.org/relax",
@@ -23,7 +24,6 @@
   "devDependencies": {
     "watchify": "^0.6.1",
     "uglify-js": "^2.4.12",
-    "browserify": "^3.30.4",
-    "mocha": "^1.17.1"
+    "browserify": "^3.30.4"
   }
 }
