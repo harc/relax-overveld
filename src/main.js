@@ -3,8 +3,8 @@
 // --------------------------------------------------------------------
 
 var Delta = require('./Delta.js');
-var installArithmeticConstraints = require('./arithmetic-constraints.js');
-var installGeometricConstraints = require('./geometric-constraints.js');
+var installArithmeticConstraints = require('./arithmetic-constraints.js').install;
+var installGeometricConstraints = require('./geometric-constraints.js').install;
 
 // --------------------------------------------------------------------
 // Public

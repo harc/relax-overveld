@@ -35,7 +35,8 @@ function RelaxCanvas(relax, canvas) {
     C: function(p1, p2)         { self.addCoincidenceConstraint(p1, p2); },
     Q: function(p1, p2, p3, p4) { self.addEquivalenceConstraint(p1, p2, p3, p4); },
     E: function(p1, p2, p3, p4) { self.addEqualDistanceConstraint(p1, p2, p3, p4); },
-    L: function(p1, p2)         { self.addLengthConstraint(p1, p2, p2.minus(p1).magnitude()); },
+    L: function(p1, p2)         { var l = Relax.geom.magnitude(Relax.geom.minus(p2, p1));
+				  self.addLengthConstraint(p1, p2, l); },
     O: function(p1, p2, p3, p4) { self.addOrientationConstraint(p1, p2, p3, p4); },
     R: function(p1, p2, p3, p4) { self.addParallelConstraint(p1, p2, p3, p4); },
     N: function(p1, p2, p3, p4) { self.addPerpendicularConstraint(p1, p2, p3, p4); },
@@ -365,11 +366,11 @@ RelaxCanvas.prototype.addEquivalenceConstraint = function(p1, p2, p3, p4) {
 };
 
 RelaxCanvas.prototype.addEqualDistanceConstraint = function(p1, p2, p3, p4) {
-  return this.relax.addConstraint('eqdist', p1, p2, p3, p4);
+  return this.relax.add(new Relax.geom.EqualDistanceConstraint(p1, p2, p3, p4));
 };
 
 RelaxCanvas.prototype.addLengthConstraint = function(p1, p2, l) {
-  return this.relax.addConstraint('length', p1, p2, l);
+  return this.relax.add(new Relax.geom.LengthConstraint(p1, p2, l));
 };
 
 RelaxCanvas.prototype.calculateAngle = function(p1, p2, p3, p4) {
@@ -381,7 +382,8 @@ RelaxCanvas.prototype.calculateAngle = function(p1, p2, p3, p4) {
 };
 
 RelaxCanvas.prototype.addOrientationConstraint = function(p1, p2, p3, p4) {
-  return this.relax.addConstraint('orientation', p1, p2, p3, p4, this.calculateAngle(p1, p2, p3, p4));
+  return this.relax.add(new Relax.geom.OrientationConstraint(
+    p1, p2, p3, p4, this.calculateAngle(p1, p2, p3, p4)));
 };
 
 RelaxCanvas.prototype.addParallelConstraint = function(p1, p2, p3, p4) {
@@ -391,7 +393,7 @@ RelaxCanvas.prototype.addParallelConstraint = function(p1, p2, p3, p4) {
     p3 = p4;
     p4 = temp;
   }
-  return this.relax.addConstraint('orientation', p1, p2, p3, p4, 0);
+  return this.relax.add(new Relax.geom.OrientationConstraint(p1, p2, p3, p4, 0));
 };
 
 RelaxCanvas.prototype.addPerpendicularConstraint = function(p1, p2, p3, p4) {
@@ -400,11 +402,11 @@ RelaxCanvas.prototype.addPerpendicularConstraint = function(p1, p2, p3, p4) {
     p3 = p4;
     p4 = temp;
   }
-  return this.relax.addConstraint('orientation', p1, p2, p3, p4, Math.PI / 2);
+  return this.relax.add(new Relax.geom.OrientationConstraint(p1, p2, p3, p4, Math.PI / 2));
 };
 
 RelaxCanvas.prototype.addMotorConstraint = function(p1, p2, w) {
-  return this.relax.addConstraint('motor', p1, p2, w);
+  return this.relax.add(new Relax.geom.MotorConstraint(p1, p2, w));
 };
 
 // -----------------------------------------------------

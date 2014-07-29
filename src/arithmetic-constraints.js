@@ -52,5 +52,4 @@ function installArithmeticConstraints(Relax) {
   };
 }
 
-module.exports = installArithmeticConstraints;
-
+module.exports.install = installArithmeticConstraints;
