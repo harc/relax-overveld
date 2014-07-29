@@ -71,13 +71,10 @@ function installGeometricConstraints(Relax) {
   Relax.geom.CoordinateConstraint = function(p, x, y) {
     this.p = p;
     this.c = {x: x, y: y};
-    this.dP = Relax.makeDeltaFor(p);
   }
 
   Relax.geom.CoordinateConstraint.prototype.computeDeltas = function(timeMillis) {
-    var diff = minus(this.c, this.p);
-    this.dP.x = diff.x;
-    this.dP.y = diff.y;
+    return {p: minus(this.c, this.p)};
   };
 
   // Coincidence Constraint, i.e., I want these two points to be at the same place.
@@ -85,14 +82,11 @@ function installGeometricConstraints(Relax) {
   Relax.geom.CoincidenceConstraint = function(p1, p2) {
     this.p1 = p1;
     this.p2 = p2;
-    this.dP1 = Relax.makeDeltaFor(p1);
-    this.dP2 = Relax.makeDeltaFor(p2);
   }
 
   Relax.geom.CoincidenceConstraint.prototype.computeDeltas = function(timeMillis) {
     var splitDiff = scaledBy(minus(this.p2, this.p1), 0.5);
-    setDelta(this.dP1, splitDiff, +1);
-    setDelta(this.dP2, splitDiff, -1);
+    return {p1: splitDiff, p2: scaledBy(splitDiff, -1)};
   };
 
   // Equivalence Constraint, i.e., I want the vectors p1->p2 and p3->p4 to be the same.
@@ -102,18 +96,14 @@ function installGeometricConstraints(Relax) {
     this.p2 = p2;
     this.p3 = p3;
     this.p4 = p4;
-    this.dP1 = Relax.makeDeltaFor(p1);
-    this.dP2 = Relax.makeDeltaFor(p2);
-    this.dP3 = Relax.makeDeltaFor(p3);
-    this.dP4 = Relax.makeDeltaFor(p4);
   }
 
   Relax.geom.EquivalenceConstraint.prototype.computeDeltas = function(timeMillis) {
     var splitDiff = scaledBy(minus(plus(this.p2, this.p3), plus(this.p1, this.p4)), 0.25);
-    setDelta(this.dP1, splitDiff, +1);
-    setDelta(this.dP2, splitDiff, -1);
-    setDelta(this.dP3, splitDiff, -1);
-    setDelta(this.dP4, splitDiff, +1);
+    return {p1: splitDiff,
+	    p2: scaledBy(splitDiff, -1),
+	    p3: scaledBy(splitDiff, -1),
+	    p4: splitDiff};
   };
 
   // Equal Distance constraint - keeps distances P1-->P2, P3-->P4 equal
@@ -123,10 +113,6 @@ function installGeometricConstraints(Relax) {
     this.p2 = p2;
     this.p3 = p3;
     this.p4 = p4;
-    this.dP1 = Relax.makeDeltaFor(p1);
-    this.dP2 = Relax.makeDeltaFor(p2);
-    this.dP3 = Relax.makeDeltaFor(p3);
-    this.dP4 = Relax.makeDeltaFor(p4);
   };
 
   Relax.geom.EqualDistanceConstraint.prototype.computeDeltas = function(timeMillis) {
@@ -135,10 +121,10 @@ function installGeometricConstraints(Relax) {
     var delta = (l12 - l34) / 4;
     var e12 = scaledBy(normalized(minus(this.p2, this.p1)), delta);
     var e34 = scaledBy(normalized(minus(this.p4, this.p3)), delta);
-    setDelta(this.dP1, e12, +1);
-    setDelta(this.dP2, e12, -1);
-    setDelta(this.dP3, e34, -1);
-    setDelta(this.dP4, e34, +1);
+    return {p1: e12,
+	    p2: scaledBy(e12, -1),
+	    p3: scaledBy(e34, -1),
+	    p4: e34};
   };
 
   // Length constraint - maintains distance between P1 and P2 at L.
@@ -147,16 +133,14 @@ function installGeometricConstraints(Relax) {
     this.p1 = p1;
     this.p2 = p2;
     this.l = l;
-    this.dP1 = Relax.makeDeltaFor(p1);
-    this.dP2 = Relax.makeDeltaFor(p2);
   };
 
   Relax.geom.LengthConstraint.prototype.computeDeltas = function(timeMillis) {
     var l12 = magnitude(minus(this.p1, this.p2));
     var delta = (l12 - this.l) / 2;
     var e12 = scaledBy(normalized(minus(this.p2, this.p1)), delta);
-    setDelta(this.dP1, e12, +1);
-    setDelta(this.dP2, e12, -1);
+    return {p1: e12,
+	    p2: scaledBy(e12, -1)};
   };
 
   // Orientation constraint - maintains angle between P1->P2 and P3->P4 at Theta
@@ -167,10 +151,6 @@ function installGeometricConstraints(Relax) {
     this.p3 = p3;
     this.p4 = p4;
     this.theta = theta;
-    this.dP1 = Relax.makeDeltaFor(p1);
-    this.dP2 = Relax.makeDeltaFor(p2);
-    this.dP3 = Relax.makeDeltaFor(p3);
-    this.dP4 = Relax.makeDeltaFor(p4);
   };
 
   Relax.geom.OrientationConstraint.prototype.computeDeltas = function(timeMillis) {
@@ -186,11 +166,11 @@ function installGeometricConstraints(Relax) {
     var dTheta = this.theta - currTheta;
     // TODO: figure out why setting dTheta to 1/2 times this value (as shown in the paper
     // and seems to make sense) results in jumpy/unstable behavior.
-    
-    setDelta(this.dP1, minus(rotatedAround(this.p1, dTheta, m12), this.p1), +1);
-    setDelta(this.dP2, minus(rotatedAround(this.p2, dTheta, m12), this.p2), +1);
-    setDelta(this.dP3, minus(rotatedAround(this.p3, -dTheta, m34), this.p3), +1);
-    setDelta(this.dP4, minus(rotatedAround(this.p4, -dTheta, m34), this.p4), +1);
+
+    return {p1: minus(rotatedAround(this.p1, dTheta, m12), this.p1),
+	    p2: minus(rotatedAround(this.p2, dTheta, m12), this.p2),
+	    p3: minus(rotatedAround(this.p3, -dTheta, m34), this.p3),
+	    p4: minus(rotatedAround(this.p4, -dTheta, m34), this.p4)};
   };
 
   // Motor constraint - causes P1 and P2 to orbit their midpoint at the given rate.
@@ -201,17 +181,15 @@ function installGeometricConstraints(Relax) {
     this.p2 = p2;
     this.w = w;
     this.lastT = Date.now();
-    this.dP1 = Relax.makeDeltaFor(p1);
-    this.dP2 = Relax.makeDeltaFor(p2);
   };
 
   Relax.geom.MotorConstraint.prototype.computeDeltas = function(timeMillis) {
     var t = (timeMillis - this.lastT) / 1000.0; // t is time delta in *seconds*
+    this.lastT = timeMillis;
     var dTheta = t * this.w * (2 * Math.PI);
     var m12 = midpoint(this.p1, this.p2);
-    setDelta(this.dP1, minus(rotatedAround(this.p1, dTheta, m12), this.p1), +1);
-    setDelta(this.dP2, minus(rotatedAround(this.p2, dTheta, m12), this.p2), +1);
-    this.lastT = timeMillis;
+    return {p1: minus(rotatedAround(this.p1, dTheta, m12), this.p1),
+	    p2: minus(rotatedAround(this.p2, dTheta, m12), this.p2)};
   };
 }
 

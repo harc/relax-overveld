@@ -6,49 +6,65 @@ function installArithmeticConstraints(Relax) {
 
   Relax.arith = {};
 
+  // Helpers
+
+  function installRef(target, ref, prefix) {
+    target[prefix + '_obj'] = ref.obj;
+    target[prefix + '_prop'] = ref.prop;
+  }
+
+  function ref(target, prefix) {
+    return target[prefix + '_obj'][target[prefix + '_prop']];
+  }
+
+  function patch(target /* , prefix, delta, ... */) {
+    var result = {};
+    for (var i = 1; i < arguments.length; i += 2) {
+      var prefix = arguments[i];
+      var delta = arguments[i+1];
+      var d = result[prefix + '_obj'];
+      if (!d) {
+	result[prefix + '_obj'] = d = {};
+      }
+      d[target[prefix + '_prop']] = delta;
+    }
+    return result;
+  }
+
   // Value Constraint, i.e., o.p = value
 
   Relax.arith.ValueConstraint = function(ref, value) {
-    this.ref = ref;
+    installRef(this, ref, 'v');
     this.value = value;
-    this.dObj = Relax.makeDeltaFor(ref.obj);
   }
 
   Relax.arith.ValueConstraint.prototype.computeDeltas = function(timeMillis) {
-    this.dObj[this.ref.prop] = this.value - this.ref.obj[this.ref.prop];
+    return patch(this, 'v', this.value - ref(this, 'v'));
   };
 
   // Equality Constraint, i.e., o1.p1 = o2.p2
 
   Relax.arith.EqualityConstraint = function(ref1, ref2) {
-    this.ref1 = ref1;
-    this.ref2 = ref2;
-    this.dObj1 = Relax.makeDeltaFor(ref1.obj);
-    this.dObj2 = Relax.makeDeltaFor(ref2.obj);
+    installRef(this, ref1, 'v1');
+    installRef(this, ref2, 'v2');
   }
 
   Relax.arith.EqualityConstraint.prototype.computeDeltas = function(timeMillis) {
-    var diff = this.ref1.obj[this.ref1.prop] - this.ref2.obj[this.ref2.prop];
-    this.dObj1[this.ref1.prop] = -diff / 2;
-    this.dObj2[this.ref2.prop] = +diff / 2;
+    var diff = ref(this, 'v1') - ref(this, 'v2');
+    return patch(this, 'v1', -diff / 2, 'v2', +diff / 2);
   };
 
   // Sum Constraint, i.e., o1.p1 + o2.p2 = o3.p3
 
   Relax.arith.SumConstraint = function(ref1, ref2, ref3) {
-    this.ref1 = ref1;
-    this.ref2 = ref2;
-    this.ref3 = ref3;
-    this.dObj1 = Relax.makeDeltaFor(ref1.obj);
-    this.dObj2 = Relax.makeDeltaFor(ref2.obj);
-    this.dObj3 = Relax.makeDeltaFor(ref3.obj);
+    installRef(this, ref1, 'v1');
+    installRef(this, ref2, 'v2');
+    installRef(this, ref3, 'v3');
   }
 
   Relax.arith.SumConstraint.prototype.computeDeltas = function(timeMillis) {
-    var diff = this.ref3.obj[this.ref3.prop] - (this.ref1.obj[this.ref1.prop] + this.ref2.obj[this.ref2.prop]);
-    this.dObj1[this.ref1.prop] = +diff / 3;
-    this.dObj2[this.ref2.prop] = +diff / 3;
-    this.dObj3[this.ref3.prop] = -diff / 3;
+    var diff = ref(this, 'v3') - (ref(this, 'v1') + ref(this, 'v2'));
+    return patch(this, 'v1', +diff / 3, 'v2', +diff / 3, 'v3', -diff / 3);
   };
 }
 
