@@ -22,6 +22,7 @@ Relax.makeDeltaFor = function(obj) {
 
 Relax.prototype.add = function(thing) {
   this.things.push(thing);
+  return thing;
 };
 
 Relax.prototype.remove = function(unwantedThing) {

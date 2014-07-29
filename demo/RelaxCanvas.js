@@ -122,7 +122,7 @@ RelaxCanvas.prototype.exitDeleteMode = function() {
 
 RelaxCanvas.prototype.clearSelection = function() {
   this.selection = [];
-  this.relax.things.forEach(function(p) {
+  this.points.forEach(function(p) {
     p.selectionIndices = [];
   });
 };
@@ -138,7 +138,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
   var pointIdx;
-  this.relax.things.forEach(function(p, idx) {
+  this.points.forEach(function(p, idx) {
     if (self.pointContains(p, e.clientX, e.clientY)) {
       point = p;
       pointIdx = idx;
@@ -148,8 +148,8 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     if (this.deleteMode) {
       this.removePoint(point);
     } else {
-      this.relax.things.splice(pointIdx, 1);
-      this.relax.things.push(point);
+      this.points.splice(pointIdx, 1);
+      this.points.push(point);
       this.fingers[e.pointerId] = {x: e.clientX, y: e.clientY, point: point};
       point.isSelected = true;
       if (this.pointMode) {
@@ -331,7 +331,7 @@ RelaxCanvas.prototype.redraw = function() {
   this.ctxt.fillStyle = 'white';
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
   this.lines.forEach(function(l) { self.drawLine(l); });
-  this.relax.things.forEach(function(p) { self.drawPoint(p); });
+  this.points.forEach(function(p) { self.drawPoint(p); });
   if (this.showConstraints) {
     this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt); } });
   }
