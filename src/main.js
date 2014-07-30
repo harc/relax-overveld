@@ -16,6 +16,10 @@ function Relax() {
   this.groupedConstraints = null; // computed lazily
 }
 
+Relax.isConstraint = function(thing) {
+  return thing.computeDeltas !== undefined;
+};
+
 Relax.prototype.add = function(thing) {
   this.things.push(thing);
   this.groupedConstraints = null; // conservative
@@ -26,9 +30,18 @@ Relax.prototype.remove = function(unwantedThing) {
   var self = this;
   this.things = this.things.filter(function(thing) {
     return thing !== unwantedThing &&
-           !(isConstraint(thing) && involves(thing, unwantedThing));
+           !(Relax.isConstraint(thing) && involves(thing, unwantedThing));
   });
   this.groupedConstraints = null; // conservative
+};
+
+Relax.prototype.clear = function() {
+  this.things = [];
+  this.groupedConstraints = null;
+};
+
+Relax.prototype.getConstraints = function() {
+  return this.things.filter(Relax.isConstraint);
 };
 
 Relax.prototype.doOneIteration = function(timeMillis) {
@@ -95,7 +108,7 @@ Relax.prototype.iterateForUpToMillis = function(tMillis) {
 function groupConstraints(things) {
   var sorted = [];
   things.forEach(function (t) {
-    if (isConstraint(t)) {
+    if (Relax.isConstraint(t)) {
       sorted.push([t.priority || 0, t]);
     }
   });
@@ -119,10 +132,6 @@ function groupConstraints(things) {
     grouped.push(group);
   }
   return grouped;
-};
-
-function isConstraint(thing) {
-  return thing.computeDeltas !== undefined;
 };
 
 function hasSignificantDeltas(relax, deltas) {
