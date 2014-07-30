@@ -373,7 +373,7 @@ RelaxCanvas.prototype.addConstraint = function(ctorName /* , arguments, ... */) 
   var ctor = this.constraintConstructors[ctorName];
   ctor = ctor.bind.apply(ctor, args);
   var c = new ctor();
-  c._spec = [ctorName, args];
+  c._spec = [ctorName, args.slice(1)];
   this.constraints.push(c);
   this.relax.add(c);
   return c;
