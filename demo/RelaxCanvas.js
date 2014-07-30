@@ -56,8 +56,6 @@ function RelaxCanvas(relax, canvas) {
   this.applyFn = undefined;
   this.selection = [];
 
-  this.relax.beforeEachIteration = this.movePointsToFingers.bind(this);
-
   this.stepFn = this.step.bind(this);
   this.step();
 }
@@ -162,9 +160,12 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     if (this.deleteMode) {
       this.removePoint(point);
     } else {
+      var constraint = this.addCoordinateConstraint(point, e.clientX, e.clientY);
+      constraint.priority = 10;
       this.points.splice(pointIdx, 1);
       this.points.push(point);
-      this.fingers[e.pointerId] = {x: e.clientX, y: e.clientY, point: point};
+      this.fingers[e.pointerId] =
+	{ x: e.clientX, y: e.clientY, point: point, constraint: constraint };
       point.isSelected = true;
       if (this.pointMode) {
         var oldLastPoint = this.lastPoint;
@@ -203,6 +204,7 @@ RelaxCanvas.prototype.pointerup = function(e) {
   var finger = this.fingers[e.pointerId];
   if (finger) {
     finger.point.isSelected = false;
+    this.removeConstraint(finger.constraint);
     delete this.fingers[e.pointerId];
   }
 };
@@ -213,13 +215,6 @@ RelaxCanvas.prototype.forEachFinger = function(fn) {
   for (var id in this.fingers) {
     fn(this.fingers[id]);
   }
-};
-
-RelaxCanvas.prototype.movePointsToFingers = function() {
-  this.forEachFinger(function(finger) {
-    finger.point.x = finger.x;
-    finger.point.y = finger.y;
-  });
 };
 
 RelaxCanvas.prototype.updateCoordinateConstraints = function() {
@@ -244,8 +239,6 @@ RelaxCanvas.prototype.step = function() {
     } else {
       this.iterationsPerFrame = this.relax.iterateForUpToMillis(1000 / 65);
     }
-  } else {
-    this.movePointsToFingers();
   }
   this.redraw();
   requestAnimationFrame(this.stepFn);
@@ -296,7 +289,18 @@ RelaxCanvas.prototype.drawLine = function(l) {
   this.ctxt.stroke();
 };
 
-Relax.geom.LengthConstraint.prototype.draw = function(ctxt) {
+Relax.geom.CoordinateConstraint.prototype.draw = function(ctxt, rc) {
+  if (this.p.isSelected) return; // don't draw over the selection highlight
+  ctxt.fillStyle = 'black';
+  ctxt.beginPath();
+  ctxt.arc(this.c.x, this.c.y, rc.pointRadius * 0.666, 0, 2 * Math.PI);
+  ctxt.closePath();
+  ctxt.fill();
+};
+
+Relax.geom.LengthConstraint.prototype.draw = function(ctxt, rc) {
+  if (!rc.showConstraints) return;
+
   ctxt.lineWidth = 1;
   ctxt.strokeStyle = 'yellow';
   ctxt.beginPath();
@@ -346,9 +350,7 @@ RelaxCanvas.prototype.redraw = function() {
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
   this.lines.forEach(function(l) { self.drawLine(l); });
   this.points.forEach(function(p) { self.drawPoint(p); });
-  if (this.showConstraints) {
-    this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt); } });
-  }
+  this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
 };
 
 // -----------------------------------------------------
@@ -378,7 +380,6 @@ RelaxCanvas.prototype.addConstraint = function(ctorName /* , arguments, ... */) 
 };
 
 RelaxCanvas.prototype.addCoordinateConstraint = function(p, x, y) {
-  p.color = 'black';
   return this.addConstraint('Relax.geom.CoordinateConstraint', p, x, y);
 };
 
