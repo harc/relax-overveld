@@ -223,8 +223,8 @@ RelaxCanvas.prototype.updateCoordinateConstraints = function() {
     if (constraint instanceof Relax.geom.CoordinateConstraint) {
       self.forEachFinger(function(finger) {
         if (finger.point === constraint.p) {
-          constraint.c.x = finger.x;
-          constraint.c.y = finger.y;
+          constraint.c.x = constraint._spec[1][1] = finger.x;
+          constraint.c.y = constraint._spec[1][2] = finger.y;
         }
       });
     }
