@@ -1,7 +1,7 @@
 # Relax
 
-This is a library for constraint relaxation. It's based on C.W.A.M van Overveld's paper
-["30 Years After Sketchpad: Relaxation of Geometric Constraints Revisited"](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.24).
+This is a library for "Overveld-style" constraint relaxation. It's based on C.W.A.M van Overveld's paper
+*[30 Years After Sketchpad: Relaxation of Geometric Constraints Revisited](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.24)*.
 
 ## Docs
 
