@@ -161,7 +161,6 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       this.removePoint(point);
     } else {
       var constraint = this.addCoordinateConstraint(point, e.clientX, e.clientY);
-      constraint.priority = 10;
       this.points.splice(pointIdx, 1);
       this.points.push(point);
       this.fingers[e.pointerId] =
