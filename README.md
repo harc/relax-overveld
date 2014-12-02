@@ -9,7 +9,7 @@ Coming soon. (Impatient? Contributions are welcome :))
 
 ## Demo
 
-[Here](http://alexwarth.github.io/demos/relax/)'s a neat a little demo that lets you experiment with several kinds of geometric constraints.
+[Here](http://alexwarth.github.io/demos/relax-overveld/)'s a neat a little demo that lets you experiment with several kinds of geometric constraints.
 
 The demo comes with a few "pre-fab" examples that you can see by clicking the buttons on the right (`rod`, `chain`, and `lazy tongs`). Give these a try, and see what happens when you move the points.
 
