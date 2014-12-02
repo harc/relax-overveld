@@ -17,11 +17,14 @@ function installArithmeticConstraints(Relax) {
     return target[prefix + '_obj'][target[prefix + '_prop']];
   }
 
-  function patch(target /* , prefix, delta, ... */) {
+  function deltas(target /* , prefix, delta, ... */) {
     var result = {};
     for (var i = 1; i < arguments.length; i += 2) {
       var prefix = arguments[i];
       var delta = arguments[i+1];
+      if (!isFinite(delta)) {
+        continue;
+      }
       var d = result[prefix + '_obj'];
       if (!d) {
 	result[prefix + '_obj'] = d = {};
@@ -39,7 +42,7 @@ function installArithmeticConstraints(Relax) {
   }
 
   Relax.arith.ValueConstraint.prototype.computeDeltas = function(timeMillis) {
-    return patch(this, 'v', this.value - ref(this, 'v'));
+    return deltas(this, 'v', this.value - ref(this, 'v'));
   };
 
   // Equality Constraint, i.e., o1.p1 = o2.p2
@@ -51,7 +54,9 @@ function installArithmeticConstraints(Relax) {
 
   Relax.arith.EqualityConstraint.prototype.computeDeltas = function(timeMillis) {
     var diff = ref(this, 'v1') - ref(this, 'v2');
-    return patch(this, 'v1', -diff / 2, 'v2', +diff / 2);
+    return deltas(this,
+        'v1', -diff / 2,
+        'v2', +diff / 2);
   };
 
   // Sum Constraint, i.e., o1.p1 + o2.p2 = o3.p3
@@ -64,7 +69,10 @@ function installArithmeticConstraints(Relax) {
 
   Relax.arith.SumConstraint.prototype.computeDeltas = function(timeMillis) {
     var diff = ref(this, 'v3') - (ref(this, 'v1') + ref(this, 'v2'));
-    return patch(this, 'v1', +diff / 3, 'v2', +diff / 3, 'v3', -diff / 3);
+    return deltas(this,
+        'v1', +diff / 3,
+        'v2', +diff / 3,
+        'v3', -diff / 3);
   };
 }
 

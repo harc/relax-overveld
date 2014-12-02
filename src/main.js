@@ -93,7 +93,7 @@ Relax.prototype.iterateForUpToMillis = function(tMillis) {
   var now, t0, t;
   now = t0 = Date.now();
   do {
-    didSomething = this.doOneIteration(now);
+    didSomething = this.doOneIteration(t0);
     now = Date.now();
     t = now - t0;
     count += didSomething ? 1 : 0;
