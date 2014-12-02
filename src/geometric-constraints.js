@@ -193,6 +193,5 @@ function installGeometricConstraints(Relax) {
   };
 }
 
-///////////////////////////////////////////////////////////////////////////
+module.exports = installGeometricConstraints;
 
-module.exports.install = installGeometricConstraints;

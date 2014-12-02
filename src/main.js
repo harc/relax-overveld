@@ -2,8 +2,8 @@
 // Imports
 // --------------------------------------------------------------------
 
-var installArithmeticConstraints = require('./arithmetic-constraints.js').install;
-var installGeometricConstraints = require('./geometric-constraints.js').install;
+var installArithmeticConstraints = require('./arithmetic-constraints.js');
+var installGeometricConstraints = require('./geometric-constraints.js');
 
 // --------------------------------------------------------------------
 // Public
