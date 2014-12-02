@@ -8,18 +8,20 @@ canvas {
   left: 0;
 }
 
-demos {
+demos, actions {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 0;
+  bottom: 0;
   z-index: 2000;
+  overflow: auto;
+}
+
+demos {
+  right: 20px;
 }
 
 actions {
-  position: absolute;
-  bottom: 20px;
   left: 20px;
-  z-index: 2000;
 }
 
 demo, action, iterationsPerFrame, showEachIterationButton {
