@@ -1,15 +1,13 @@
 {
-  "name": "relax",
+  "name": "relax-overveld",
   "version": "0.0.0",
   "description": "an implementation of van Overveld's relaxation algorithm",
   "keywords": [
     "relaxation",
-    "constraints",
-    "arithmetic constraints",
-    "geometric constraints"
+    "constraints"
   ],
-  "homepage": "http://tinlizzie.org/relax",
-  "bugs": "http://github.com/alexwarth/relax/issues",
+  "homepage": "https://github.com/cdglabs/relax-overveld",
+  "bugs": "https://github.com/cdglabs/relax-overveld/issues",
   "main": "src/main.js",
   "scripts": {
     "clean": "rm -f dist/relax.js dist/relax.min.js",
