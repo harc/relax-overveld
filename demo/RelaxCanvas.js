@@ -1,3 +1,5 @@
+//var n = new NodeImpl();
+
 function Line(p1, p2) {
   this.p1 = p1;
   this.p2 = p2;
@@ -423,4 +425,3 @@ class ES6Test {
 
 e = new ES6Test();
 e.test();
-

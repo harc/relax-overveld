@@ -7,6 +7,7 @@
   <body>
     <script src="../3rdparty/pointerevents.js"></script>
     <script src="../dist/relax.js"></script>
+    <script src="../src/forwarder.js"></script>
     <script src="RelaxCanvas.js"></script>
     <script src="Turtle.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
@@ -78,6 +79,34 @@ Object.keys(examples).forEach(function(e) {
   demos.appendChild(demo);
 });
 
+var forwarder = document.getElementById('forwarder');
+
+</script>
+<script src="../src/nodeImpl.js"></script>
+<script src="../src/name.js"></script>
+<script>
+
+var nodeImpl = document.getElementById('nodeImpl');
+var name = document.getElementById('name');
+
+</script>
+<script src="../src/interest.js"></script>
+<script src="../src/data.js"></script>
+<script src="../src/link.js"></script>
+<script>
+
+var interest = document.getElementById('interest');
+var data = document.getElementById('data');
+var link = document.getElementById('link');
+
+</script>
+<script src="../src/producer.js"></script>
+<script src="../src/consumer.js"></script>
+<script>
+
+var consumer = document.getElementById('consumer');
+var producer = document.getElementById('producer');
+
 var canvas = document.getElementById('canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -105,4 +134,3 @@ updateSIILabel();
     </script>
   </body>
 </html>
-
