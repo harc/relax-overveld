@@ -13,16 +13,11 @@
     <demos id="demos"></demos>
     <actions id="actions">
       <action key='P'>P: point</action>
+      <action key='S'>S: step</action>
       <action key='D'>D: delete</action>
-      <action key='F'>F: coordinate/1</action>
-      <action key='C'>C: coincidence/2</action>
       <action key='Q'>Q: equivalence/4</action>
       <action key='E'>E: eqdist/4</action>
       <action key='L'>L: length/2</action>
-      <action key='O'>O: orientation/4</action>
-      <action key='R'>R: parallel/4</action>
-      <action key='N'>N: perpendicular/4</action>
-      <action key='M'>M: motor/2</action>
     </actions>
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
     <showEachIterationButton id="sii"></showEachIterationButton>
@@ -33,7 +28,6 @@ var demos = document.getElementById('demos');
 var examples = {};
 
 function showDemo(name) {
-  rc.clear();
   examples[name]();
 }
 
@@ -71,15 +65,13 @@ onload = function() {
     </script>
 
     <script src="example-clear.js"></script>
-    <script src="example-rod.js"></script>
-    <script src="example-chain.js"></script>
-    <script src="example-lazy-tongs.js"></script>
-
+    <script src="example-3-sausage-topology.js"></script>
+    <script src="example-9-sausage-topology.js"></script>
     <script>
 
 Object.keys(examples).forEach(function(e) {
   var demo = document.createElement('demo');
-  demo.appendChild(document.createTextNode(e));
+  demo.appendChild(document.createTextNode(e.replace("_", " ")));
   demo.onclick = function() {
     showDemo(e);
   };
