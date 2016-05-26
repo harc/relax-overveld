@@ -84,7 +84,7 @@ RelaxCanvas.prototype.keydown = function(k) {
   switch (k) {
     case 'P': this.enterPointMode();  break;
     case 'D': this.enterDeleteMode(); break;
-    case 'S': this.showConstraints = !this.showConstraints; break;
+    case 'S': console.log("step"); break;
     default:
       if (this.applyFns[k] && this.applyFn !== this.applyFns[k]) {
         this.clearSelection();
