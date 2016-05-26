@@ -1,2 +1,2 @@
-examples.clear = function() {};
+examples.clear = function() {rc.clear()};
 
