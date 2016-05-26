@@ -1,4 +1,5 @@
-//var n = new NodeImpl();
+var ID = 0;
+var getID = () => ID++;
 
 function Line(p1, p2) {
   this.p1 = p1;
@@ -84,6 +85,7 @@ RelaxCanvas.prototype.initCanvas = function(canvas) {
 
 RelaxCanvas.prototype.keydown = function(k) {
   switch (k) {
+    case 'L': this.logSerialization();  break;
     case 'P': this.enterPointMode();  break;
     case 'D': this.enterDeleteMode(); break;
     case 'S': console.log("step"); break;
@@ -94,6 +96,25 @@ RelaxCanvas.prototype.keydown = function(k) {
       }
   }
 };
+
+RelaxCanvas.prototype.serializePoint = function (point) {
+  return point.name + ' ' + point.x + ' ' + point.y;
+}
+
+RelaxCanvas.prototype.serializeLine = function (line) {
+  return line.p1.name + ' ' + line.p2.name;
+}
+
+RelaxCanvas.prototype.serializeTopology = function () {
+  return '#Name X Y\n' +
+      this.points.map(this.serializePoint).join('\n') +
+      '\n#Src Dst\n' +
+      this.lines.map(this.serializeLine).join('\n');
+}
+
+RelaxCanvas.prototype.logSerialization = function () {
+  console.log(this.serializeTopology());
+}
 
 RelaxCanvas.prototype.keyup = function(k) {
   switch (k) {
@@ -347,7 +368,13 @@ RelaxCanvas.prototype.redraw = function() {
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.addPoint = function(x, y, optColor) {
-  var p = {x: x, y: y, color: optColor || 'slateBlue', selectionIndices: []};
+  var p = {
+    x: x,
+    y: y,
+    color: optColor || 'slateBlue',
+    selectionIndices: [],
+    name: 'Node' + getID(),
+  };
   this.points.push(p);
   this.relax.add(p);
   return p;
