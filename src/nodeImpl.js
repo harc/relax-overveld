@@ -1,9 +1,5 @@
-var Forwarder = require('./Forwarder')
-
 class NodeImpl {
   constructor() {
-    this.forwarder = new Forwarder(this);
+    this.forwarder = new forwarder(this);
   };
 }
-
-module.exports = NodeImpl;

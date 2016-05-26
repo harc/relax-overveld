@@ -21,5 +21,3 @@ class Link {
     dst.receiveData(this, data);
   };
 }
-
-module.exports = Link;

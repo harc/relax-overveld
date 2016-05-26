@@ -7,5 +7,3 @@ class Name {
     // return all components minus the last
   };
 }
-
-module.exports = Name;

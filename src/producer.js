@@ -1,10 +1,6 @@
-var Node = require('./NodeImpl');
-var Data = require('./Data');
-var Interest = require('./Interest');
-
-class Producer extends Node {
+class Producer extends nodeImpl {
   constructor(dataName) {
-    this.data = new Data(dataName);
+    this.data = new data(dataName);
   };
 
   initialize() {
@@ -15,5 +11,3 @@ class Producer extends Node {
     this.forwarder.sendData(interest, this.data);
   }
 }
-
-module.exports = Producer;

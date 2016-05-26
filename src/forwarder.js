@@ -45,4 +45,4 @@ class Forwarder {
         }
 }
 
-module.exports = Forwarder;
+// module.exports = Forwarder;

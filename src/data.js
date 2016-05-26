@@ -1,9 +1,5 @@
-var Name = require('./Name');
-
 class Data {
   constructor(name) {
-    this.name = new Name(name);
+    this.name = new name(name);
   };
 }
-
-module.exports = Data;
