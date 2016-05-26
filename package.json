@@ -23,5 +23,8 @@
     "watchify": "^0.6.1",
     "uglify-js": "^2.4.12",
     "browserify": "^3.30.4"
+  },
+  "dependencies": {
+    "babel-cli": "^6.9.0"
   }
 }
