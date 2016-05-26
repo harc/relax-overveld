@@ -462,3 +462,12 @@ RelaxCanvas.prototype.clear = function() {
   this.fingers = {}; // because fingers can refer to points
 };
 
+class ES6Test {
+  test() {
+    console.log('ES6 is working');
+  }
+}
+
+e = new ES6Test();
+e.test();
+
