@@ -19,7 +19,7 @@ function RelaxCanvas(relax, canvas) {
   this.showEachIteration = false;
   this.iterationsPerFrame = 0;
   this.paused = false;
-  this.points = [];
+  this.nodes = [];
   this.lines = [];
   this.constraints = [];
 
@@ -31,7 +31,7 @@ function RelaxCanvas(relax, canvas) {
 
   this.fingers = {};
 
-  this.pointMode = false;
+  this.nodeMode = false;
   this.lastPoint = undefined;
 
   this.deleteMode = false;
@@ -108,7 +108,7 @@ RelaxCanvas.prototype.serializeLine = function (line) {
 
 RelaxCanvas.prototype.serializeTopology = function () {
   return '#Name X Y\n' +
-      this.points.map(this.serializePoint).join('\n') +
+      this.nodes.map(this.serializePoint).join('\n') +
       '\n#Src Dst\n' +
       this.lines.map(this.serializeLine).join('\n');
 };
@@ -157,7 +157,7 @@ RelaxCanvas.prototype.exitDeleteMode = function() {
 
 RelaxCanvas.prototype.clearSelection = function() {
   this.selection = [];
-  this.points.forEach(function(p) {
+  this.nodes.forEach(function(p) {
     p.selectionIndices = [];
   });
 };
@@ -173,7 +173,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
   var pointIdx;
-  this.points.forEach(function(p, idx) {
+  this.nodes.forEach(function(p, idx) {
     if (self.pointContains(p, e.clientX, e.clientY)) {
       point = p;
       pointIdx = idx;
@@ -203,8 +203,8 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       this.removePoint(point);
     } else {
       var constraint = this.addCoordinateConstraint(point, e.clientX, e.clientY);
-      this.points.splice(pointIdx, 1);
-      this.points.push(point);
+      this.nodes.splice(pointIdx, 1);
+      this.nodes.push(point);
       this.fingers[e.pointerId] =
 	{ x: e.clientX, y: e.clientY, point: point, constraint: constraint };
       point.isSelected = true;
@@ -226,7 +226,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     }
   } else if (this.pointMode) {
     var oldLastPoint = this.lastPoint;
-    this.lastPoint = this.addPoint(e.clientX, e.clientY);
+    this.lastPoint = this.addNode(e.clientX, e.clientY);
     if (oldLastPoint) {
       this.addLine(oldLastPoint, this.lastPoint);
     }
@@ -397,24 +397,17 @@ RelaxCanvas.prototype.redraw = function() {
   this.ctxt.fillStyle = 'white';
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
   this.lines.forEach(function(l) { self.drawLine(l); });
-  this.points.forEach(function(p) { self.drawPoint(p); });
+  this.nodes.forEach(function(p) { self.drawPoint(p); });
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
 };
 
 // -----------------------------------------------------
 
-RelaxCanvas.prototype.addPoint = function(x, y, optColor) {
-  var p = {
-    x: x,
-    y: y,
-    color: optColor || 'slateBlue',
-    selectionIndices: [],
-    name: 'Node' + getID(),
-    type: 'Producer',
-  };
-  this.points.push(p);
-  this.relax.add(p);
-  return p;
+RelaxCanvas.prototype.addNode = function(x, y, optColor) {
+  var n = new Node({x: x, y: y, optColor: optColor});
+  this.nodes.push(n);
+  this.relax.add(n);
+  return n;
 };
 
 RelaxCanvas.prototype.addLine = function(p1, p2) {
@@ -457,7 +450,7 @@ RelaxCanvas.prototype.calculateAngle = function(p1, p2, p3, p4) {
 
 RelaxCanvas.prototype.removePoint = function(unwanted) {
   this.relax.remove(unwanted);
-  this.points = this.points.filter(function(p) { return p !== unwanted; });
+  this.nodes = this.nodes.filter(function(p) { return p !== unwanted; });
   this.lines = this.lines.filter(function(l) { return !l.involvesPoint(unwanted); });
   this.constraints = this.relax.getConstraints();
 };
@@ -474,11 +467,11 @@ RelaxCanvas.prototype.removeConstraint = function(unwanted) {
 RelaxCanvas.prototype.clear = function() {
   this.relax.clear();
 
-  this.points = [];
+  this.nodes = [];
   this.lines = [];
   this.constraints = [];
 
-  this.fingers = {}; // because fingers can refer to points
+  this.fingers = {}; // because fingers can refer to nodes
 };
 
 class ES6Test {
