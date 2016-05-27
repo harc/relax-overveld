@@ -57,7 +57,7 @@ Turtle.prototype.forwardBy = function(dist) {
   this.x = this.transX(dist, 0);
   this.y = this.transY(dist, 0);
   if (this._penDown) {
-    this.currentPoint = this.rc.addPoint(this.x, this.y);
+    this.currentPoint = this.rc.addNode(this.x, this.y);
     this.rc.addLine(origin, this.currentPoint);
   } else {
     this.currentPoint = undefined;
@@ -74,7 +74,7 @@ Turtle.prototype.addConstraint = function(ctorName /* arguments */) {
 
 Turtle.prototype.ensureCurrentPoint = function() {
   if (!this.currentPoint) {
-    this.currentPoint = this.rc.addPoint(this.x, this.y);
+    this.currentPoint = this.rc.addNode(this.x, this.y);
   }
   return this.currentPoint;
 };

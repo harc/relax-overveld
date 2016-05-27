@@ -1,13 +1,13 @@
 examples.Nine_Node_Sausage_Topology = function() {
-  var p1 = rc.addPoint(200,  200);
-  var p2 = rc.addPoint(300,  200);
-  var p3 = rc.addPoint(400,  200);
-  var p4 = rc.addPoint(500,  200);
-  var p5 = rc.addPoint(600,  200);
-  var p6 = rc.addPoint(700,  200);
-  var p7 = rc.addPoint(800,  200);
-  var p8 = rc.addPoint(900,  200);
-  var p9 = rc.addPoint(1000, 200);
+  var p1 = rc.addNode(200,  200);
+  var p2 = rc.addNode(300,  200);
+  var p3 = rc.addNode(400,  200);
+  var p4 = rc.addNode(500,  200);
+  var p5 = rc.addNode(600,  200);
+  var p6 = rc.addNode(700,  200);
+  var p7 = rc.addNode(800,  200);
+  var p8 = rc.addNode(900,  200);
+  var p9 = rc.addNode(1000, 200);
 
   rc.addLine(p1, p2);
   rc.addLine(p2, p3);
