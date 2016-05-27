@@ -88,6 +88,7 @@ RelaxCanvas.prototype.keydown = function(k) {
     case 'L': this.logSerialization();  break;
     case 'P': this.enterPointMode();  break;
     case 'D': this.enterDeleteMode(); break;
+    case 'T': this.enterTypeMode(); break;
     case 'S': console.log("step"); break;
     default:
       if (this.applyFns[k] && this.applyFn !== this.applyFns[k]) {
@@ -99,33 +100,42 @@ RelaxCanvas.prototype.keydown = function(k) {
 
 RelaxCanvas.prototype.serializePoint = function (point) {
   return point.name + ' ' + point.x + ' ' + point.y;
-}
+};
 
 RelaxCanvas.prototype.serializeLine = function (line) {
   return line.p1.name + ' ' + line.p2.name;
-}
+};
 
 RelaxCanvas.prototype.serializeTopology = function () {
   return '#Name X Y\n' +
       this.points.map(this.serializePoint).join('\n') +
       '\n#Src Dst\n' +
       this.lines.map(this.serializeLine).join('\n');
-}
+};
 
 RelaxCanvas.prototype.logSerialization = function () {
   console.log(this.serializeTopology());
-}
+};
 
 RelaxCanvas.prototype.keyup = function(k) {
   switch (k) {
     case 'P': this.exitPointMode();  break;
     case 'D': this.exitDeleteMode(); break;
+    case 'T': this.exitTypeMode(); break;
     default:
       if (this.applyFn === this.applyFns[k]) {
         this.clearSelection();
         this.applyFn = undefined;
       }
   }
+};
+
+RelaxCanvas.prototype.enterTypeMode = function() {
+  this.typeMode = true;
+};
+
+RelaxCanvas.prototype.exitTypeMode = function() {
+  this.typeMode = false;
 };
 
 RelaxCanvas.prototype.enterPointMode = function() {
@@ -170,7 +180,13 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     }
   });
   if (point) {
-    if (this.deleteMode) {
+    if (this.typeMode) {
+      if (point.type === 'Producer') {
+        point.type = 'Consumer';
+      } else {
+        point.type = 'Producer';
+      }
+    } else if (this.deleteMode) {
       this.removePoint(point);
     } else {
       var constraint = this.addCoordinateConstraint(point, e.clientX, e.clientY);
@@ -268,7 +284,14 @@ RelaxCanvas.prototype.resume = function() {
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.drawPoint = function(p) {
-  this.ctxt.fillStyle = p.isSelected ? 'yellow' : p.color;
+  if (p.isSelected) {
+    this.ctxt.fillStyle = 'yellow';
+  } else if (p.type === 'Producer') {
+    this.ctxt.fillStyle = 'red';
+  } else {
+    this.ctxt.fillStyle = p.color;
+  }
+
   this.ctxt.beginPath();
   this.ctxt.arc(p.x, p.y, this.pointRadius, 0, 2 * Math.PI);
   this.ctxt.closePath()
@@ -374,6 +397,7 @@ RelaxCanvas.prototype.addPoint = function(x, y, optColor) {
     color: optColor || 'slateBlue',
     selectionIndices: [],
     name: 'Node' + getID(),
+    type: 'Producer',
   };
   this.points.push(p);
   this.relax.add(p);
