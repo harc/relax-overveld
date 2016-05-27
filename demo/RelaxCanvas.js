@@ -181,10 +181,23 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   });
   if (point) {
     if (this.typeMode) {
+      var edges = this.lines.filter(function(l) { return l.involvesPoint(point); });
+      // TODO Change this to construct subclasses)
+      var newPoint = this.addPoint(point.x, point.y);
+      for (var e in edges) {
+        if (e.p1 === point) {
+          e.p1 = newPoint;
+        }
+        else {
+          e.p2 = newPoint;
+        }
+      }
+      this.removePoint(point);
+      this.lines = this.lines.concat(edges);
       if (point.type === 'Producer') {
-        point.type = 'Consumer';
+        newPoint.type = 'Consumer';
       } else {
-        point.type = 'Producer';
+        newPoint.type = 'Producer';
       }
     } else if (this.deleteMode) {
       this.removePoint(point);
