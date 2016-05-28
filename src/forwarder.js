@@ -24,14 +24,19 @@ class Forwarder {
     }
 
     sendInterest(interest) {
-        var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
-        if (longestPrefixMatchIndex !== -1) {
-            var longestPrefix = this.fib[longestPrefixMatchIndex];
-            var link = this.dict[longestPrefix];
-            if (link) {
-                return link.sendInterest(this, interest);
-            }
+        var link = this.dict[interest.name];
+        if (link) {
+            return link.sendInterest(this, interest);
         }
+        // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
+        // if (longestPrefixMatchIndex !== -1) {
+        //     var longestPrefix = this.fib[longestPrefixMatchIndex];
+        //     var link = this.dict[longestPrefix];
+        //     if (link) {
+        //         return link.sendInterest(this, interest);
+        //     }
+        // }
+
     }
 
     receiveInterest(link, interest) {
@@ -52,15 +57,14 @@ class Forwarder {
     }
 
     findLongestPrefixMatch(name) {
-        var arrayOfNameComponents = name.split("/");
+        var arrayOfNameComponents = name.toUri().split("/");
         var longestPrefixMatchIndex = -1;
         var maximumMatchedComponents = -1;
         var fibEntryCounter = -1;
-        var fibEntry;
-        for (fibEntry of this.fib) {
+        for (var fibEntry of this.fib) {
             fibEntryCounter += 1;
             var currentMatchedComponents = 0;
-            var entryNameComponents = fibEntry.split("/");
+            var entryNameComponents = fibEntry.toUri().split("/");
             //console.log(entryNameComponents);
             for (var i = 0; i < arrayOfNameComponents.length; i++) {
               if (entryNameComponents[i] === arrayOfNameComponents[i]) {

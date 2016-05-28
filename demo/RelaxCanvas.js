@@ -413,15 +413,14 @@ RelaxCanvas.prototype.redraw = function() {
   this.edges.forEach(function(l) { self.drawLine(l); });
   this.nodes.forEach(function(p) { self.drawPoint(p); });
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
-
-  var serialization = new Serialization();
-  serialization.draw({nodes: this.nodes, edges: this.edges});
+  
+  (new Serialization(this.ctxt)).draw({nodes: this.nodes, edges: this.edges});
 };
 
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
-  var args = {x: x, y: y, optColor: optColor, name: optName || "/a/"};
+  var args = {x: x, y: y, optColor: optColor, name: optName || "/a"};
   var n =  type == NODE_TYPE.PRODUCER ? new Producer(args)  : new Consumer(args);
   this.nodes.push(n);
   this.relax.add(n);
