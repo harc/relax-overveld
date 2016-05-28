@@ -149,9 +149,8 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
 };
 
 RelaxCanvas.prototype.showAttributes = function (node) {
-  var box = new AttributesBox(node);
-  box.draw();
-}
+  AttributesBox.draw(node);
+};
 
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
@@ -382,8 +381,8 @@ RelaxCanvas.prototype.redraw = function() {
   this.nodes.forEach(function(p) { self.drawPoint(p); });
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
 
-  var serialization = new Serialization();
-  serialization.draw({nodes: this.nodes, edges: this.edges});
+  // TODO: a quick CPU profile shows this call as taking 15% of CPU time (because DOM instead of canvas)
+  Serialization.draw({nodes: this.nodes, edges: this.edges});
 };
 
 // -----------------------------------------------------

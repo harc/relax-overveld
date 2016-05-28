@@ -4,7 +4,7 @@
 
 class Serialization {
     
-    draw ({nodes, edges}={}) {
+    static draw ({nodes, edges}={}) {
         var old = document.getElementById('serialization');
         if (old) old.parentNode.removeChild(old);
 
