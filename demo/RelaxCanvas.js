@@ -404,6 +404,8 @@ RelaxCanvas.prototype.redraw = function() {
   this.lines.forEach(function(l) { self.drawLine(l); });
   this.nodes.forEach(function(p) { self.drawPoint(p); });
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
+
+  // TODO: draw the serialization here
 };
 
 // -----------------------------------------------------
