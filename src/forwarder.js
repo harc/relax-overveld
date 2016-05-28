@@ -3,6 +3,8 @@ class Forwarder {
         this.node = node;
         this.links = [];
         this.fib = [];
+        // dictionary of prefixes to links
+        this.dict = [];
         this.pit = [];
     };
 
@@ -17,13 +19,18 @@ class Forwarder {
     }
 
     registerPrefix(link, prefix) {
-        this.fib[prefix] = link;
+        this.fib.push(prefix);
+        this.dict[prefix] = link;
     }
 
     sendInterest(interest) {
-        var link = this.fib[interest.name];
-        if (link) {
-            link.sendInterest(this, interest);
+        var longestPrefixMatchIndex = findLongestPrefixMatch(interest.name);
+        if (longestPrefixMatchIndex !== -1) {
+            var longestPrefix = this.fib[longestPrefixMatchIndex];
+            var link = this.dict[longestPrefix];
+            if (link) {
+                link.sendInterest(this, interest);
+              }
         }
     }
 
