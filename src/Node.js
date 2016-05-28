@@ -10,4 +10,8 @@ class Node {
         this.selectionIndices = [];
         this.name = 'Node' + getID();
     }
+    
+    serialize () {
+        return [this.name, this.x, this.y].join(' ');
+    }
 }
