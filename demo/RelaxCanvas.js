@@ -381,8 +381,7 @@ RelaxCanvas.prototype.redraw = function() {
   this.nodes.forEach(function(p) { self.drawPoint(p); });
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
 
-  // TODO: a quick CPU profile shows this call as taking 15% of CPU time (because DOM instead of canvas)
-  Serialization.draw({nodes: this.nodes, edges: this.edges});
+  (new Serialization(this.ctxt)).draw({nodes: this.nodes, edges: this.edges});
 };
 
 // -----------------------------------------------------

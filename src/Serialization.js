@@ -4,29 +4,35 @@
 
 class Serialization {
     
-    static draw ({nodes, edges}={}) {
-        var old = document.getElementById('serialization');
-        if (old) old.parentNode.removeChild(old);
-
-        var box = document.createElement("div");
-        box.setAttribute('id', 'serialization');
-        box.setAttribute('style', 'z-index: 2000;');
-        box.style.position = 'absolute';
-        box.style.top = 400;
-        box.style.left = 30;
-        box.style.fontFamily = 'monospace';
+    constructor(context) {
+        this.x = 10;
+        this.y = 400;
+        this.lineOffset = 15;
+        this.context = context;
+        this.context.fillStyle = 'black';
+        this.context.font = 'monospace';
         
-        appendText(box, '#Name X Y PARAM');
-        nodes.map(n => n.serialize()).forEach(appendText.bind(null, box));
-        appendText(box, '#Src Dst');
-        edges.map(e => e.serialize()).forEach(appendText.bind(null, box));
+        this.writeLine = this.writeLine.bind(this);
+        
+        this.nodeHeader = '#Name X Y Param';
+        this.edgeHeader = '#Src Dst';
+    }
+    
+    draw ({nodes, edges}={}) {
+        this.writeLine(this.nodeHeader);
+        nodes.map(_ => _.serialize()).forEach(this.writeLine);
+        this.writeLine(this.edgeHeader);
+        edges.map(_ => _.serialize()).forEach(this.writeLine);
+    }
 
-        document.body.appendChild(box);
+    getOffset() {
+        var oldY = this.y;
+        this.y += this.lineOffset;
+        return oldY;
+    }
+    
+    writeLine(line) {
+        this.context.fillText(line, this.x, this.getOffset());
     }
 }
 
-function appendText(parent, text) {
-    var p = document.createElement('p');
-    p.innerHTML = text;
-    parent.appendChild(p);
-}
