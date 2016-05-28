@@ -149,7 +149,6 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
 };
 
 RelaxCanvas.prototype.showAttributes = function (node) {
-  console.log('attributes for', node);
   var box = new AttributesBox(node);
   box.draw();
 }
@@ -166,11 +165,20 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   });
   if (point) {
     if (this.typeMode) {
-      if (point.type === 'Producer') {
-        point.type = 'Consumer';
-      } else {
-        point.type = 'Producer';
+      // Create a new node of the opposit type, delete the old point, redirect all the edges
+      var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
+      var newPoint = this.addNode(point.x, point.y, newType);
+      var edges = this.lines.filter(function(l) { return l.involvesPoint(point); });
+      for (var e in edges) {
+        if (e.p1 === point) {
+          e.p1 = newPoint;
+        }
+        else {
+          e.p2 = newPoint;
+        }
       }
+      this.removePoint(point);
+      this.lines = this.lines.concat(edges);
     } else if (this.attributesMode) {
       this.showAttributes(point);
     } else if (this.deleteMode) {
@@ -273,7 +281,7 @@ RelaxCanvas.prototype.resume = function() {
 RelaxCanvas.prototype.drawPoint = function(p) {
   if (p.isSelected) {
     this.ctxt.fillStyle = 'yellow';
-  } else if (p.type === 'Producer') {
+  } else if (p.type == NODE_TYPE.PRODUCER ) {
     this.ctxt.fillStyle = 'red';
   } else {
     this.ctxt.fillStyle = p.color;
@@ -380,8 +388,9 @@ RelaxCanvas.prototype.redraw = function() {
 
 // -----------------------------------------------------
 
-RelaxCanvas.prototype.addNode = function(x, y, optColor) {
-  var n = new Node({x: x, y: y, optColor: optColor});
+RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
+  var args = {x: x, y: y, optColor: optColor, name: optName || new Name("/a")};
+  var n =  type == NODE_TYPE.PRODUCER ? new Producer(args)  : new Consumer(args);
   this.nodes.push(n);
   this.relax.add(n);
   return n;
