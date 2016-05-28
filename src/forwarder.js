@@ -43,4 +43,35 @@ class Forwarder {
             link.sendData(this, data);
         }
     }
+
+    findLongestPrefixMatch(name) {
+        var arrayOfNameComponents = name.split("/");
+        var longestPrefixMatchIndex = -1;
+        var maximumMatchedComponents = -1;
+        var fibEntryCounter = -1;
+        var fibEntry;
+        for (fibEntry of this.fib) {
+            fibEntryCounter += 1;
+            var currentMatchedComponents = 0;
+            var entryNameComponents = fibEntry.split("/");
+            //console.log(entryNameComponents);
+            for (var i = 0; i < arrayOfNameComponents.length; i++) {
+              if (entryNameComponents[i] === arrayOfNameComponents[i]) {
+                // console.log(entryNameComponents[i]);
+                // console.log(arrayOfNameComponents[i]);
+                currentMatchedComponents += 1;
+              }
+              else {
+                  currentMatchedComponents = -2;
+                  break;
+              }
+            }
+            if (currentMatchedComponents >= maximumMatchedComponents) {
+              maximumMatchedComponents = currentMatchedComponents;
+              longestPrefixMatchIndex = fibEntryCounter;
+            }
+        }
+        return longestPrefixMatchIndex;
+    }
+
 }
