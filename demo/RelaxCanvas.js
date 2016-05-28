@@ -159,9 +159,8 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
 };
 
 RelaxCanvas.prototype.showAttributes = function (node) {
-  var box = new AttributesBox(node);
-  box.draw();
-}
+  AttributesBox.draw(node);
+};
 
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;

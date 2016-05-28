@@ -40,7 +40,10 @@ class Forwarder {
     }
 
     receiveInterest(link, interest) {
-        this.pit[interest] = link;
+        if (!this.pit[interest]) {
+            this.pit[interest] = [];
+        }
+        this.pit[interest].push(link);
         return this.node.receiveInterest(interest);
     }
 
@@ -49,11 +52,22 @@ class Forwarder {
     }
 
     sendData(interest, data) {
-        var link = this.pit[interest];
-        if (link) {
+        var links = this.pit[interest];
+        if (links) {
+            var block = [];
+            for (var link of links) {
+                block.push(link.sendData(this, data));
+            }
             delete this.pit[interest];
-            return link.sendData(this, data);
         }
+        if (block && block.length > 0) {
+            return function() {
+                for (var s of block) {
+                    s.call()
+                }
+            }.bind(this)
+        }
+        return undefined;
     }
 
     findLongestPrefixMatch(name) {
