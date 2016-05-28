@@ -16,4 +16,8 @@ class Node {
         this.name = 'Node' + getID();
         this.forwarder = new Forwarder(this);
     }
+    
+    serialize () {
+        return [this.name, this.x, this.y].join(' ');
+    }
 }
