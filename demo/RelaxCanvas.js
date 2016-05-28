@@ -169,8 +169,6 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
   return square(this.pointRadius) >= square(x - p.x) + square(y - p.y);
 };
 
-
-
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
@@ -183,10 +181,10 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   });
   if (point) {
     if (this.typeMode) {
-      var edges = this.lines.filter(function(l) { return l.involvesPoint(point); });
+      // Create a new node of the opposit type, delete the old point, redirect all the edges
       var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
-      // TODO Change this to construct subclasses)
       var newPoint = this.addNode(point.x, point.y, newType);
+      var edges = this.lines.filter(function(l) { return l.involvesPoint(point); });
       for (var e in edges) {
         if (e.p1 === point) {
           e.p1 = newPoint;
@@ -197,7 +195,6 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       }
       this.removePoint(point);
       this.lines = this.lines.concat(edges);
-      newPoint.type = newType;
     } else if (this.deleteMode) {
       this.removePoint(point);
     } else {
