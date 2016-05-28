@@ -13,7 +13,7 @@ class Forwarder {
     }
 
     announcePrefix(prefix) {
-        for (var link in this.links) {
+        for (var link of this.links) {
             link.registerPrefix(this, prefix);
         }
     }
@@ -46,7 +46,7 @@ class Forwarder {
     sendData(interest, data) {
         var link = this.pit[interest];
         if (link) {
-            this.pit.remove(interest);
+            delete this.pit[interest];
             link.sendData(this, data);
         }
     }

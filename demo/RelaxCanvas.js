@@ -38,8 +38,8 @@ function RelaxCanvas(relax, canvas) {
   this.applyFn = undefined;
   this.selection = [];
 
-  this.stepFn = this.step.bind(this);
-  this.step();
+  this.stepFn = this.stepAnimation.bind(this);
+  this.stepAnimation();
 }
 
 RelaxCanvas.prototype.initPointRadius = function() {
@@ -78,7 +78,17 @@ RelaxCanvas.prototype.keydown = function(k) {
     case 'D': this.enterDeleteMode(); break;
     case 'T': this.enterTypeMode(); break;
     case 'A': this.enterAttributesMode(); break;
-    case 'S': console.log("step"); break;
+    case 'S':
+    {
+      if (this.simulationStarted) {
+        this.step();
+      }
+      else {
+        this.simulationStarted = true;
+        this.startSimulation();
+      }
+    }
+      break;
     default:
       if (this.applyFns[k] && this.applyFn !== this.applyFns[k]) {
         this.clearSelection();
@@ -149,8 +159,9 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
 };
 
 RelaxCanvas.prototype.showAttributes = function (node) {
-  AttributesBox.draw(node);
-};
+  var box = new AttributesBox(node);
+  box.draw();
+}
 
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
@@ -167,8 +178,13 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       // Create a new node of the opposit type, delete the old point, redirect all the edges
       var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
       var newPoint = this.addNode(point.x, point.y, newType);
-      var edges = this.lines.filter(function(l) { return l.involvesPoint(point); });
-      for (var e in edges) {
+      newPoint.forwarder = point.forwarder;
+      newPoint.forwarder.node = newPoint;
+      newPoint.name = point.name;
+      var edges = this.edges.filter(function (l) {
+        return l.involvesPoint(point);
+      });
+      for (var e of edges) {
         if (e.p1 === point) {
           e.p1 = newPoint;
         }
@@ -177,7 +193,6 @@ RelaxCanvas.prototype.pointerdown = function(e) {
         }
       }
       this.removePoint(point);
-      this.lines = this.lines.concat(edges);
     } else if (this.attributesMode) {
       this.showAttributes(point);
     } else if (this.deleteMode) {
@@ -253,7 +268,7 @@ RelaxCanvas.prototype.updateCoordinateConstraints = function() {
   });
 };
 
-RelaxCanvas.prototype.step = function() {
+RelaxCanvas.prototype.stepAnimation = function () {
   this.updateCoordinateConstraints();
   if (!this.paused) {
     if (this.showEachIteration) {
@@ -264,15 +279,17 @@ RelaxCanvas.prototype.step = function() {
   }
   this.redraw();
   requestAnimationFrame(this.stepFn);
-}
-
-RelaxCanvas.prototype.pause = function() {
-  this.paused = true;
 };
 
-RelaxCanvas.prototype.resume = function() {
-  this.paused = false;
-  this.step();
+RelaxCanvas.prototype.startSimulation = function () {
+  debugger;
+  for (var n of this.nodes) {
+    n.start();
+  }
+};
+
+RelaxCanvas.prototype.step = function () {
+
 };
 
 // -----------------------------------------------------
@@ -288,7 +305,7 @@ RelaxCanvas.prototype.drawPoint = function(p) {
 
   this.ctxt.beginPath();
   this.ctxt.arc(p.x, p.y, this.pointRadius, 0, 2 * Math.PI);
-  this.ctxt.closePath()
+  this.ctxt.closePath();
   this.ctxt.fill();
   if (p.selectionIndices.length > 0) {
     this.drawSelectionIndices(p);
@@ -381,13 +398,14 @@ RelaxCanvas.prototype.redraw = function() {
   this.nodes.forEach(function(p) { self.drawPoint(p); });
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
 
-  (new Serialization(this.ctxt)).draw({nodes: this.nodes, edges: this.edges});
+  var serialization = new Serialization();
+  serialization.draw({nodes: this.nodes, edges: this.edges});
 };
 
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
-  var args = {x: x, y: y, optColor: optColor, name: optName || new Name("/a")};
+  var args = {x: x, y: y, optColor: optColor, name: optName || "/a/"};
   var n =  type == NODE_TYPE.PRODUCER ? new Producer(args)  : new Consumer(args);
   this.nodes.push(n);
   this.relax.add(n);
@@ -396,6 +414,8 @@ RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
 
 RelaxCanvas.prototype.addLine = function(p1, p2) {
   var l = new Edge(p1, p2);
+  p1.forwarder.addLink(l);
+  p2.forwarder.addLink(l);
   this.edges.push(l);
   return l;
 };

@@ -17,17 +17,17 @@ class Edge {
     }
 
     registerPrefix(src, prefix) {
-        var dst = (src == this.node1) ? this.node2 : this.node1;
-        dst.forwarder.registerPrefix(this, prefix)
+        var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
+        dst.registerPrefix(this, prefix)
     };
 
     sendInterest(src, interest) {
-        var dst = (src == this.node1) ? this.node2 : this.node1;
-        dst.forwarder.receiveInterest(this, interest);
+        var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
+        dst.receiveInterest(this, interest);
     };
 
     sendData(src, data) {
-        var dst = (src == this.node1) ? this.node2 : this.node1;
-        dst.forwarder.receiveData(this, data);
+        var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
+        dst.receiveData(this, data);
     };
 }

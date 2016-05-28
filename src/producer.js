@@ -8,13 +8,14 @@ class Producer extends Node {
   get type() {
     return NODE_TYPE.PRODUCER;
   }
-  
-  
-  initialize() {
+
+
+  start() {
     this.forwarder.announcePrefix(this.data.name.prefix);
   }
 
   receiveInterest(interest) {
+    console.log(this.name + " received Interest: " + JSON.stringify(interest));
     this.forwarder.sendData(interest, this.data);
   }
 }
