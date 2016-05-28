@@ -16,7 +16,7 @@ class Serialization {
         box.style.left = 30;
         box.style.fontFamily = 'monospace';
         
-        appendText(box, '#Name X Y');
+        appendText(box, '#Name X Y PARAM');
         nodes.map(n => n.serialize()).forEach(appendText.bind(null, box));
         appendText(box, '#Src Dst');
         edges.map(e => e.serialize()).forEach(appendText.bind(null, box));

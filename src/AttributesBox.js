@@ -21,9 +21,18 @@ class AttributesBox {
         name.onchange = function (e) {
             this.node.name = e.target.value
         }.bind(this);
-        
         box.appendChild(name);
-        
+
+        var parameter = document.createElement("input");
+        parameter.setAttribute("type", "range");
+        parameter.setAttribute("value", this.node.parameter);
+        parameter.setAttribute("min", "0");
+        parameter.setAttribute("max", "100");
+        parameter.onchange = function (e) {
+            this.node.parameter = e.target.value;
+        }.bind(this);
+        box.appendChild(parameter);
+
         document.body.appendChild(box);
     }
 }
