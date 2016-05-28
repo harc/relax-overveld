@@ -169,6 +169,8 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
   return square(this.pointRadius) >= square(x - p.x) + square(y - p.y);
 };
 
+
+
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
@@ -182,8 +184,9 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   if (point) {
     if (this.typeMode) {
       var edges = this.lines.filter(function(l) { return l.involvesPoint(point); });
+      var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
       // TODO Change this to construct subclasses)
-      var newPoint = this.addPoint(point.x, point.y);
+      var newPoint = this.addNode(point.x, point.y, newType);
       for (var e in edges) {
         if (e.p1 === point) {
           e.p1 = newPoint;
@@ -194,11 +197,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       }
       this.removePoint(point);
       this.lines = this.lines.concat(edges);
-      if (point.type === 'Producer') {
-        newPoint.type = 'Consumer';
-      } else {
-        newPoint.type = 'Producer';
-      }
+      newPoint.type = newType;
     } else if (this.deleteMode) {
       this.removePoint(point);
     } else {
@@ -299,7 +298,7 @@ RelaxCanvas.prototype.resume = function() {
 RelaxCanvas.prototype.drawPoint = function(p) {
   if (p.isSelected) {
     this.ctxt.fillStyle = 'yellow';
-  } else if (p.type === 'Producer') {
+  } else if (p.type == NODE_TYPE.PRODUCER ) {
     this.ctxt.fillStyle = 'red';
   } else {
     this.ctxt.fillStyle = p.color;
@@ -403,8 +402,9 @@ RelaxCanvas.prototype.redraw = function() {
 
 // -----------------------------------------------------
 
-RelaxCanvas.prototype.addNode = function(x, y, optColor) {
-  var n = new Node({x: x, y: y, optColor: optColor});
+RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
+  var args = {x: x, y: y, optColor: optColor, name: optName || new Name("/a")};
+  var n =  type == NODE_TYPE.PRODUCER ? new Producer(args)  : new Consumer(args);
   this.nodes.push(n);
   this.relax.add(n);
   return n;
