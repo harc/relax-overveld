@@ -31,10 +31,10 @@ function RelaxCanvas(relax, canvas) {
 
   this.fingers = {};
 
-  this.nodeMode = false;
-  this.lastPoint = undefined;
-
   this.deleteMode = false;
+  this.nodeMode = false;
+  this.attributesMode = false;
+  this.lastPoint = undefined;
 
   this.initPointRadius();
   this.initCanvas(canvas);
@@ -85,10 +85,11 @@ RelaxCanvas.prototype.initCanvas = function(canvas) {
 
 RelaxCanvas.prototype.keydown = function(k) {
   switch (k) {
-    case 'L': this.logSerialization();  break;
-    case 'P': this.enterPointMode();  break;
+    case 'L': this.logSerialization(); break;
+    case 'P': this.enterPointMode(); break;
     case 'D': this.enterDeleteMode(); break;
     case 'T': this.enterTypeMode(); break;
+    case 'A': this.enterAttributesMode(); break;
     case 'S': console.log("step"); break;
     default:
       if (this.applyFns[k] && this.applyFn !== this.applyFns[k]) {
@@ -119,6 +120,7 @@ RelaxCanvas.prototype.logSerialization = function () {
 
 RelaxCanvas.prototype.keyup = function(k) {
   switch (k) {
+    case 'A': this.exitAttributesMode();  break;
     case 'P': this.exitPointMode();  break;
     case 'D': this.exitDeleteMode(); break;
     case 'T': this.exitTypeMode(); break;
@@ -128,6 +130,14 @@ RelaxCanvas.prototype.keyup = function(k) {
         this.applyFn = undefined;
       }
   }
+};
+
+RelaxCanvas.prototype.enterAttributesMode = function() {
+  this.attributesMode = true;
+};
+
+RelaxCanvas.prototype.exitAttributesMode = function() {
+  this.attributesMode = false;
 };
 
 RelaxCanvas.prototype.enterTypeMode = function() {
@@ -169,6 +179,12 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
   return square(this.pointRadius) >= square(x - p.x) + square(y - p.y);
 };
 
+RelaxCanvas.prototype.showAttributes = function (node) {
+  console.log('attributes for', node);
+  var box = new AttributesBox(node);
+  box.draw();
+}
+
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
@@ -186,6 +202,8 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       } else {
         point.type = 'Producer';
       }
+    } else if (this.attributesMode) {
+      this.showAttributes(point);
     } else if (this.deleteMode) {
       this.removePoint(point);
     } else {
@@ -467,5 +485,5 @@ class ES6Test {
   }
 }
 
-e = new ES6Test();
-e.test();
+var t = new ES6Test();
+t.test();
