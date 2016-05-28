@@ -37,7 +37,7 @@ function RelaxCanvas(relax, canvas) {
   };
   this.applyFn = undefined;
   this.selection = [];
-
+  this.queue = new Queue();
   this.stepFn = this.stepAnimation.bind(this);
   this.stepAnimation();
 }
@@ -282,14 +282,30 @@ RelaxCanvas.prototype.stepAnimation = function () {
 };
 
 RelaxCanvas.prototype.startSimulation = function () {
-  debugger;
+  var block = [];
   for (var n of this.nodes) {
-    n.start();
+    block.push(n.start());
   }
+  this.queue.push(block);
 };
 
 RelaxCanvas.prototype.step = function () {
-
+  if (!this.queue.empty()) {
+    var curr_block = this.queue.pop();
+    var next = [];
+    for (var s of curr_block) {
+      var n = s.call();
+      if (n) {
+        next.push(n);
+      }
+    }
+    if (next && next.length > 0) {
+      this.queue.push(next);
+    }
+  }
+  else {
+    console.log("fin");
+  }
 };
 
 // -----------------------------------------------------

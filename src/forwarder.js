@@ -24,30 +24,30 @@ class Forwarder {
     }
 
     sendInterest(interest) {
-        var longestPrefixMatchIndex = findLongestPrefixMatch(interest.name);
+        var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         if (longestPrefixMatchIndex !== -1) {
             var longestPrefix = this.fib[longestPrefixMatchIndex];
             var link = this.dict[longestPrefix];
             if (link) {
-                link.sendInterest(this, interest);
-              }
+                return link.sendInterest(this, interest);
+            }
         }
     }
 
     receiveInterest(link, interest) {
         this.pit[interest] = link;
-        this.node.receiveInterest(interest);
+        return this.node.receiveInterest(interest);
     }
 
     receiveData(link, data) {
-        this.node.receiveData(data);
+        return this.node.receiveData(data);
     }
 
     sendData(interest, data) {
         var link = this.pit[interest];
         if (link) {
             delete this.pit[interest];
-            link.sendData(this, data);
+            return link.sendData(this, data);
         }
     }
 

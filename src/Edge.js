@@ -18,16 +18,16 @@ class Edge {
 
     registerPrefix(src, prefix) {
         var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
-        dst.registerPrefix(this, prefix)
+        return dst.registerPrefix(this, prefix)
     };
 
     sendInterest(src, interest) {
         var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
-        dst.receiveInterest(this, interest);
+        return dst.receiveInterest(this, interest);
     };
 
     sendData(src, data) {
         var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
-        dst.receiveData(this, data);
+        return dst.receiveData(this, data);
     };
 }

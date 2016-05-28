@@ -12,6 +12,7 @@
     <script src="../src/AttributesBox.js"></script>
     <script src="../src/Node.js"></script>
     <script src="../src/forwarder.js"></script>
+    <script src="../src/Queue.js"></script>
     <script src="RelaxCanvas.js"></script>
     <script src="Turtle.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
@@ -41,6 +42,8 @@ var examples = {};
 function showDemo(name) {
   examples[name]();
 }
+
+var queue = document.getElementsByTagName('Queue');
 
 var actions = document.getElementsByTagName('action');
 for (var idx = 0; idx < actions.length; idx++) {
