@@ -13,7 +13,7 @@ class Forwarder {
     }
 
     announcePrefix(prefix) {
-        for (var link in this.links) {
+        for (var link of this.links) {
             link.registerPrefix(this, prefix);
         }
     }
@@ -24,43 +24,61 @@ class Forwarder {
     }
 
     sendInterest(interest) {
-        var longestPrefixMatchIndex = findLongestPrefixMatch(interest.name);
-        if (longestPrefixMatchIndex !== -1) {
-            var longestPrefix = this.fib[longestPrefixMatchIndex];
-            var link = this.dict[longestPrefix];
-            if (link) {
-                link.sendInterest(this, interest);
-              }
+        var link = this.dict[interest.name];
+        if (link) {
+            return link.sendInterest(this, interest);
         }
+        // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
+        // if (longestPrefixMatchIndex !== -1) {
+        //     var longestPrefix = this.fib[longestPrefixMatchIndex];
+        //     var link = this.dict[longestPrefix];
+        //     if (link) {
+        //         return link.sendInterest(this, interest);
+        //     }
+        // }
+
     }
 
     receiveInterest(link, interest) {
-        this.pit[interest] = link;
-        this.node.receiveInterest(interest);
+        if (!this.pit[interest]) {
+            this.pit[interest] = [];
+        }
+        this.pit[interest].push(link);
+        return this.node.receiveInterest(interest);
     }
 
     receiveData(link, data) {
-        this.node.receiveData(data);
+        return this.node.receiveData(data);
     }
 
     sendData(interest, data) {
-        var link = this.pit[interest];
-        if (link) {
-            this.pit.remove(interest);
-            link.sendData(this, data);
+        var links = this.pit[interest];
+        if (links) {
+            var block = [];
+            for (var link of links) {
+                block.push(link.sendData(this, data));
+            }
+            delete this.pit[interest];
         }
+        if (block && block.length > 0) {
+            return function() {
+                for (var s of block) {
+                    s.call()
+                }
+            }.bind(this)
+        }
+        return undefined;
     }
 
     findLongestPrefixMatch(name) {
-        var arrayOfNameComponents = name.split("/");
+        var arrayOfNameComponents = name.toUri().split("/");
         var longestPrefixMatchIndex = -1;
         var maximumMatchedComponents = -1;
         var fibEntryCounter = -1;
-        var fibEntry;
-        for (fibEntry of this.fib) {
+        for (var fibEntry of this.fib) {
             fibEntryCounter += 1;
             var currentMatchedComponents = 0;
-            var entryNameComponents = fibEntry.split("/");
+            var entryNameComponents = fibEntry.toUri().split("/");
             //console.log(entryNameComponents);
             for (var i = 0; i < arrayOfNameComponents.length; i++) {
               if (entryNameComponents[i] === arrayOfNameComponents[i]) {
