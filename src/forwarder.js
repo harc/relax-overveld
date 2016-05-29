@@ -1,6 +1,5 @@
 class Forwarder {
     constructor(node) {
-        this.node = node;
         this.links = [];
         this.fib = [];
         // dictionary of prefixes to links
@@ -12,21 +11,24 @@ class Forwarder {
         this.links.push(link);
     }
 
-    announcePrefix(prefix) {
+    announcePrefix(src, prefix) {
         for (var link of this.links) {
-            link.registerPrefix(this, prefix);
+            if (link != src) {
+                link.registerPrefix(this, prefix);
+            }
         }
     }
 
     registerPrefix(link, prefix) {
         this.fib.push(prefix);
-        this.dict[prefix] = link;
+        this.dict[prefix.toUri()] = link;
     }
 
-    sendInterest(interest) {
-        var link = this.dict[interest.name];
-        if (link) {
-            return link.sendInterest(this, interest);
+    sendInterest(src, interest) {
+        var dst = this.dict[interest.name.toUri()];
+        if (dst) {
+            this.pit[interest.name] = src;
+            return dst.sendInterest(this, interest);
         }
         // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         // if (longestPrefixMatchIndex !== -1) {
@@ -36,7 +38,6 @@ class Forwarder {
         //         return link.sendInterest(this, interest);
         //     }
         // }
-
     }
 
     receiveInterest(link, interest) {
@@ -44,11 +45,17 @@ class Forwarder {
             this.pit[interest] = [];
         }
         this.pit[interest].push(link);
-        return this.node.receiveInterest(interest);
+        var dst = this.dict[interest.name.toUri()];
+        if (dst) {
+            return dst.receiveInterest(interest);
+        }
     }
 
     receiveData(link, data) {
-        return this.node.receiveData(data);
+        var dst = this.pit[data.name];
+        if (dst) {
+            return dst.receiveData(data);
+        }
     }
 
     sendData(interest, data) {
@@ -99,4 +106,20 @@ class Forwarder {
         return longestPrefixMatchIndex;
     }
 
+}
+
+class LocalForwarder extends Forwarder {
+    constructor(node) {
+        super(arguments[0]);
+        this.node = node;
+    };
+
+    announcePrefix(prefix) {
+        super.registerPrefix(this.node, prefix);
+        return super.announcePrefix(this.node, prefix);
+    };
+
+    sendInterest(interest) {
+        return super.sendInterest(this.node, interest);
+    }
 }

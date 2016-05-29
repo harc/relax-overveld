@@ -13,7 +13,7 @@ class Node {
         this.y = y;
         this.selectionIndices = [];
         this.name = 'Node' + getID();
-        this.forwarder = new Forwarder(this);
+        this.forwarder = new LocalForwarder(this);
         this.parameter = parameter;
         this.radius = 8;
         this.offset = 15;

@@ -11,7 +11,7 @@ class Producer extends Node {
 
   start() {
     return function() {
-      this.forwarder.announcePrefix(this.data.name.prefix)
+      this.forwarder.announcePrefix(this.data.name)
     }.bind(this);
   };
 
