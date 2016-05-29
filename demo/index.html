@@ -12,6 +12,7 @@
     <script src="../src/AttributesBox.js"></script>
     <script src="../src/Node.js"></script>
     <script src="../src/forwarder.js"></script>
+    <script src="../src/Queue.js"></script>
     <script src="RelaxCanvas.js"></script>
     <script src="Turtle.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
@@ -28,6 +29,12 @@
     <showEachIterationButton id="sii"></showEachIterationButton>
     <script>
 
+        Object.prototype.getClass = function () {
+            var funcNameRegex = /function (.{1,})\(/;
+            var results = (funcNameRegex).exec((this).constructor.toString());
+            return (results && results.length > 1) ? results[1] : "";
+        };
+
 var demos = document.getElementById('demos');
 
 var examples = {};
@@ -35,6 +42,8 @@ var examples = {};
 function showDemo(name) {
   examples[name]();
 }
+
+var queue = document.getElementsByTagName('Queue');
 
 var actions = document.getElementsByTagName('action');
 for (var idx = 0; idx < actions.length; idx++) {
@@ -95,7 +104,6 @@ var name = document.getElementById('name');
 </script>
 <script src="../src/interest.js"></script>
 <script src="../src/data.js"></script>
-<script src="../src/link.js"></script>
 <script>
 
 var interest = document.getElementById('interest');
