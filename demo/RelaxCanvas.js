@@ -177,7 +177,13 @@ RelaxCanvas.prototype.showAttributes = function (node) {
 };
 
 RelaxCanvas.prototype.startMarquee = function ({x, y}={}) {
-  this.marquee = new Marquee({x: x, y: y, addNode: this.addNode.bind(this)});
+  this.marquee = new Marquee({
+        x: x,
+        y: y,
+        addNode: this.addNode.bind(this),
+        addEdge: this.addEdge.bind(this),
+      }
+  );
 };
 
 RelaxCanvas.prototype.pointerdown = function(e) {
@@ -210,7 +216,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       // Create a new node of the opposite type, delete the old point, redirect all the edges
       var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
       var newPoint = this.addNode(point.x, point.y, newType);
-      var edges = this.lines.filter(function(l) { return l.involvesPoint(point); });
+      var edges = this.lines.filter(function(l) { return l.involvesNode(point); });
       for (var e in edges) {
         if (e.p1 === point) {
           e.p1 = newPoint;
@@ -236,7 +242,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
         var oldLastPoint = this.lastPoint;
         this.lastPoint = point;
         if (oldLastPoint && oldLastPoint !== this.lastPoint) {
-          this.addLine(oldLastPoint, this.lastPoint);
+          this.addEdge(oldLastPoint, this.lastPoint);
         }
       }
       if (this.applyFn) {
@@ -252,7 +258,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     var oldLastPoint = this.lastPoint;
     this.lastPoint = this.addNode(e.clientX, e.clientY);
     if (oldLastPoint) {
-      this.addLine(oldLastPoint, this.lastPoint);
+      this.addEdge(oldLastPoint, this.lastPoint);
     }
   }
 };
@@ -440,7 +446,7 @@ RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
   return n;
 };
 
-RelaxCanvas.prototype.addLine = function(p1, p2) {
+RelaxCanvas.prototype.addEdge = function(p1, p2) {
   var l = new Edge(p1, p2);
   this.edges.push(l);
   return l;
@@ -481,7 +487,7 @@ RelaxCanvas.prototype.calculateAngle = function(p1, p2, p3, p4) {
 RelaxCanvas.prototype.removePoint = function(unwanted) {
   this.relax.remove(unwanted);
   this.nodes = this.nodes.filter(function(p) { return p !== unwanted; });
-  this.edges = this.edges.filter(function(l) { return !l.involvesPoint(unwanted); });
+  this.edges = this.edges.filter(function(l) { return !l.involvesNode(unwanted); });
   this.constraints = this.relax.getConstraints();
 };
 

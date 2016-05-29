@@ -58,7 +58,7 @@ Turtle.prototype.forwardBy = function(dist) {
   this.y = this.transY(dist, 0);
   if (this._penDown) {
     this.currentPoint = this.rc.addNode(this.x, this.y);
-    this.rc.addLine(origin, this.currentPoint);
+    this.rc.addEdge(origin, this.currentPoint);
   } else {
     this.currentPoint = undefined;
   }

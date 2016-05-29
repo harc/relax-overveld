@@ -3,10 +3,11 @@
  */
 
 class Marquee {
-    constructor({x, y, addNode}={}) {
+    constructor({x, y, addNode, addEdge}={}) {
         this.x = x;
         this.y = y;
         this.addNode = addNode;
+        this.addEdge = addEdge;
         
         this.width = 40;
         this.height = 40;
@@ -61,17 +62,30 @@ class Marquee {
     }
     
     copy({nodes, edges}={}) {
-        this.nodes = nodes.filter(this.inBounds).map(_ => Object.assign({}, _));
+        // copy nodes
+        this.nodes = nodes.filter(this.inBounds);
+        // copy edges
+        this.edges = edges.filter(edge => {
+            var {node1, node2} = edge.nodes();
+            return this.nodes.includes(node1) && this.nodes.includes(node2);
+        });
     }
     
     paste({x, y}={}) {
+        // paste nodes
         var minX = Math.min(...this.nodes.map(_ => _.x));
         var minY = Math.min(...this.nodes.map(_ => _.y));
-        this.nodes.map(function (node) {
-            var node = Object.assign({}, node);
-            node.x = node.x - minX + x;
-            node.y = node.y - minY + y;
-            return node;
-        }).forEach(node => this.addNode(node.x, node.y));
+        var oldToNew = new Map();
+        this.nodes.forEach(node => {
+            var newX = node.x - minX + x;
+            var newY = node.y - minY + y;
+            var newNode = this.addNode(newX, newY);
+            oldToNew.set(node, newNode);
+        });
+        // paste edges
+        this.edges.forEach(edge => {
+           var {node1, node2} = edge.nodes();
+           this.addEdge(oldToNew.get(node1), oldToNew.get(node2));
+        });
     }
 }
