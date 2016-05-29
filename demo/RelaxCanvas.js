@@ -20,6 +20,10 @@ function RelaxCanvas(relax, canvas) {
 
   this.fingers = {};
 
+  this.marquee = null;
+  this.drawingMarquee = false;
+  this.pasteMode = false;
+  this.copyMode = false;
   this.deleteMode = false;
   this.nodeMode = false;
   this.attributesMode = false;
@@ -74,6 +78,8 @@ RelaxCanvas.prototype.initCanvas = function(canvas) {
 
 RelaxCanvas.prototype.keydown = function(k) {
   switch (k) {
+    case 'V': this.enterPasteMode(); break;
+    case 'C': this.enterCopyMode(); break;
     case 'P': this.enterPointMode(); break;
     case 'D': this.enterDeleteMode(); break;
     case 'T': this.enterTypeMode(); break;
@@ -99,8 +105,10 @@ RelaxCanvas.prototype.keydown = function(k) {
 
 RelaxCanvas.prototype.keyup = function(k) {
   switch (k) {
-    case 'A': this.exitAttributesMode();  break;
-    case 'P': this.exitPointMode();  break;
+    case 'V': this.exitPasteMode(); break;
+    case 'C': this.exitCopyMode(); break;
+    case 'A': this.exitAttributesMode(); break;
+    case 'P': this.exitPointMode(); break;
     case 'D': this.exitDeleteMode(); break;
     case 'T': this.exitTypeMode(); break;
     default:
@@ -109,6 +117,22 @@ RelaxCanvas.prototype.keyup = function(k) {
         this.applyFn = undefined;
       }
   }
+};
+
+RelaxCanvas.prototype.enterPasteMode = function () {
+  this.pasteMode = true;
+};
+
+RelaxCanvas.prototype.exitPasteMode = function () {
+  this.pasteMode = false;
+};
+
+RelaxCanvas.prototype.enterCopyMode = function () {
+  this.copyMode = true;
+};
+
+RelaxCanvas.prototype.exitCopyMode = function () {
+  this.copyMode = false;
 };
 
 RelaxCanvas.prototype.enterAttributesMode = function() {
@@ -162,6 +186,16 @@ RelaxCanvas.prototype.showAttributes = function (node) {
   AttributesBox.draw(node);
 };
 
+RelaxCanvas.prototype.startMarquee = function ({x, y}={}) {
+  this.marquee = new Marquee({
+        x: x,
+        y: y,
+        addNode: this.addNode.bind(this),
+        addEdge: this.addEdge.bind(this),
+      }
+  );
+};
+
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
@@ -172,9 +206,24 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       pointIdx = idx;
     }
   });
+
+
+  if (this.copyMode) {
+    if (this.drawingMarquee) {
+      this.marquee.copy({nodes: this.nodes, edges: this.edges});
+      this.drawingMarquee = false;
+    } else {
+      this.startMarquee({x: e.clientX, y: e.clientY});
+      this.drawingMarquee = true;
+    }
+  }
+  else if (this.pasteMode) {
+    this.marquee.paste({x: e.clientX, y: e.clientY});
+  }
+  
   if (point) {
     if (this.typeMode) {
-      // Create a new node of the opposit type, delete the old point, redirect all the edges
+      // Create a new node of the opposite type, delete the old point, redirect all the edges
       var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
       var newPoint = this.addNode(point.x, point.y, newType);
       newPoint.forwarder = point.forwarder;
@@ -207,7 +256,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
         var oldLastPoint = this.lastPoint;
         this.lastPoint = point;
         if (oldLastPoint && oldLastPoint !== this.lastPoint) {
-          this.addLine(oldLastPoint, this.lastPoint);
+          this.addEdge(oldLastPoint, this.lastPoint);
         }
       }
       if (this.applyFn) {
@@ -223,7 +272,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     var oldLastPoint = this.lastPoint;
     this.lastPoint = this.addNode(e.clientX, e.clientY);
     if (oldLastPoint) {
-      this.addLine(oldLastPoint, this.lastPoint);
+      this.addEdge(oldLastPoint, this.lastPoint);
     }
   }
 };
@@ -234,6 +283,8 @@ RelaxCanvas.prototype.pointermove = function(e) {
     finger.x = e.clientX;
     finger.y = e.clientY;
   }
+  
+  if (this.marquee) { this.marquee.update({x: e.clientX, y: e.clientY}); }
 };
 
 RelaxCanvas.prototype.pointerup = function(e) {
@@ -412,8 +463,9 @@ RelaxCanvas.prototype.redraw = function() {
   this.edges.forEach(function(l) { self.drawLine(l); });
   this.nodes.forEach(function(p) { self.drawPoint(p); });
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
-  
+
   (new Serialization(this.ctxt)).draw({nodes: this.nodes, edges: this.edges});
+  if (this.drawingMarquee) { this.marquee.draw(this.ctxt); }
 };
 
 // -----------------------------------------------------
@@ -426,7 +478,7 @@ RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
   return n;
 };
 
-RelaxCanvas.prototype.addLine = function(p1, p2) {
+RelaxCanvas.prototype.addEdge = function(p1, p2) {
   var l = new Edge(p1, p2);
   p1.forwarder.addLink(l);
   p2.forwarder.addLink(l);
@@ -469,7 +521,7 @@ RelaxCanvas.prototype.calculateAngle = function(p1, p2, p3, p4) {
 RelaxCanvas.prototype.removePoint = function(unwanted) {
   this.relax.remove(unwanted);
   this.nodes = this.nodes.filter(function(p) { return p !== unwanted; });
-  this.edges = this.edges.filter(function(l) { return !l.involvesPoint(unwanted); });
+  this.edges = this.edges.filter(function(l) { return !l.involvesNode(unwanted); });
   this.constraints = this.relax.getConstraints();
 };
 

@@ -8,8 +8,15 @@ class Edge {
         this.p2 = p2;
     }
     
-    involvesPoint(p) {
+    involvesNode(p) {
         return p === this.p1 || p === this.p2;
+    }
+    
+    nodes() {
+        return {
+            node1: this.p1,
+            node2: this.p2,
+        };
     }
     
     serialize() {
