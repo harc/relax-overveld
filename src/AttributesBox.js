@@ -3,32 +3,57 @@
  */
 
 class AttributesBox {
+    constructor(node) {
+        this.box = document.createElement("div");
+        this.node = node;
+
+        var offset = 10;
+        this.box.style.top = this.node.y + offset;
+        this.box.style.left = this.node.x + offset;
+        this.box.style.position = 'absolute';
+    }
     
-    static draw (node) {
-        var box = document.createElement("div");
-        box.setAttribute('id', 'attr');
-        box.setAttribute('style', 'z-index: 2000;');
-        box.style.position = 'absolute';
-        box.style.top = node.y;
-        box.style.left = node.x;
+    draw () {
+        this.addLabel('Name ');
+        this.addTextInput({
+            defaultValue: this.node.name,
+            onChange: e => this.node.name = e.target.value,
+        });
+        this.addBreak();
+        this.addRangeInput({
+            defaultValue: this.node.parameter,
+            onChange: e => this.node.parameter = e.target.value,
+            min: 0,
+            max: 100,
+        });
         
-        var name = document.createElement("input");
-        name.setAttribute('value', node.name);
-        name.onchange = function (e) {
-            node.name = e.target.value
-        }.bind(this);
-        box.appendChild(name);
-
-        var parameter = document.createElement("input");
-        parameter.setAttribute("type", "range");
-        parameter.setAttribute("value", node.parameter);
-        parameter.setAttribute("min", "0");
-        parameter.setAttribute("max", "100");
-        parameter.onchange = function (e) {
-            node.parameter = e.target.value;
-        }.bind(this);
-        box.appendChild(parameter);
-
-        document.body.appendChild(box);
+        document.body.appendChild(this.box);
+    }
+    
+    addLabel(label) {
+        var element = document.createElement('label');
+        element.innerHTML = label;
+        this.box.appendChild(element);
+    }
+    
+    addTextInput({defaultValue, onChange}={}) {
+        var input = document.createElement('input');
+        input.setAttribute('value', defaultValue);
+        input.onkeyup = onChange;
+        this.box.appendChild(input);
+    }
+    
+    addBreak() {
+        this.box.appendChild(document.createElement('br'));
+    }
+    
+    addRangeInput({defaultValue, onChange, min=0, max=100}={}) {
+        var range = document.createElement('input');
+        range.setAttribute('type', 'range');
+        range.setAttribute('value', defaultValue);
+        range.setAttribute('min', min);
+        range.setAttribute('max', max);
+        range.oninput = onChange;
+        this.box.appendChild(range);
     }
 }
