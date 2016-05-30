@@ -5,10 +5,14 @@
 class RouterNode extends Node {
     constructor() {
         super(arguments[0]);
-        this.color = 'black'
+        this.color = 'black';
         this.forwarder =  new Router(this);
     }
 
     start() {
+    }
+    
+    drawAttributes(context) {
+        context.fillText('Router', this.x + this.offset, this.y - this.offset);
     }
 }

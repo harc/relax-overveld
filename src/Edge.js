@@ -26,6 +26,16 @@ class Edge {
         };
     }
     
+    draw(context) {
+        context.beginPath();
+        context.moveTo(this.p1.x, this.p1.y);
+        context.lineWidth = 3;
+        context.strokeStyle = (this.numPackets === 0) ? 'gray' : 'red';
+        context.lineTo(this.p2.x, this.p2.y);
+        context.closePath();
+        context.stroke();
+    }
+    
     serialize() {
         return [this.p1.name, this.p2.name].join(' ');
     }

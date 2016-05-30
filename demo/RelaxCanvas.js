@@ -408,16 +408,6 @@ RelaxCanvas.prototype.drawSelectionIndices = function(p) {
   this.ctxt.stroke();
 };
 
-RelaxCanvas.prototype.drawLine = function(l) {
-  this.ctxt.beginPath();
-  this.ctxt.moveTo(l.p1.x, l.p1.y);
-  this.ctxt.lineWidth = 3;
-  this.ctxt.strokeStyle = 'gray';
-  this.ctxt.lineTo(l.p2.x, l.p2.y);
-  this.ctxt.closePath();
-  this.ctxt.stroke();
-};
-
 Relax.geom.CoordinateConstraint.prototype.draw = function(ctxt, rc) {
   if (this.p.isSelected) return; // don't draw over the selection highlight
   ctxt.fillStyle = 'black';
@@ -477,7 +467,7 @@ RelaxCanvas.prototype.redraw = function() {
   var self = this;
   this.ctxt.fillStyle = 'white';
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  this.edges.forEach(function(l) { self.drawLine(l); });
+  this.edges.forEach(_ => _.draw(this.ctxt));
   this.nodes.forEach(_ => _.draw(this.ctxt));
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
 
