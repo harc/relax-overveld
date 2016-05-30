@@ -26,26 +26,21 @@ class Forwarder {
 
     sendInterest(src, interest) {
         var interestName = interest.name.toUri();
-        var dst = this.dict[interestName];
-        if (dst) {
-            // interest aggregation
-            if (!this.pit[interestName]) {
-                this.pit[interestName] = [src];
-                return dst.sendInterest(this, interest);
-            }
-            else {
-                this.pit[interestName].push(src);
+        var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
+        if (longestPrefixMatchIndex !== -1) {
+            var longestPrefix = this.fib[longestPrefixMatchIndex];
+            var dst = this.dict[interestName];
+            if (dst) {
+              if (!this.pit[interestName]) {
+                  this.pit[interestName] = [src];
+                  return dst.sendInterest(this, interest);
+              }
+              else {
+                  this.pit[interestName].push(src);
+              }
             }
         }
-        // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
-        // if (longestPrefixMatchIndex !== -1) {
-        //     var longestPrefix = this.fib[longestPrefixMatchIndex];
-        //     var link = this.dict[longestPrefix];
-        //     if (link) {
-        //         return link.sendInterest(this, interest);
-        //     }
-        // }
-    }
+      }
 
     receiveInterest(link, interest) {
         var interestName = interest.name.toUri();
