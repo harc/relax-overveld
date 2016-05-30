@@ -5,6 +5,8 @@ var Block = function(block) {
     this.block = block;
 };
 
+Block.prototype = new Function();
+
 Block.prototype.call =  function() {
     var next_block = [];
     for (var s of this.block) {
