@@ -28,6 +28,7 @@ class Consumer extends Node {
 
   drawAttributes(context) {
     context.fillText('Interest: ' + this.interest.name.toUri(), this.x + this.offset, this.y - this.offset);
+    context.fillText('Consumer', this.x + this.offset, this.y - 2*this.offset);
   }
 
   fields() {

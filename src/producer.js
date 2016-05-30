@@ -24,6 +24,7 @@ class Producer extends Node {
   
   drawAttributes(context) {
     context.fillText('Data: ' + this.data.name.toUri(), this.x + this.offset, this.y - this.offset);
+    context.fillText('Producer', this.x + this.offset, this.y - 2*this.offset);
   }
   
   fields() {
