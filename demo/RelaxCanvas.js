@@ -230,7 +230,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       newPoint.forwarder.node = newPoint;
       newPoint.name = point.name;
       var edges = this.edges.filter(function (l) {
-        return l.involvesPoint(point);
+        return l.involvesNode(point);
       });
       for (var e of edges) {
         if (e.p1 === point) {
