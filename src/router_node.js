@@ -15,4 +15,8 @@ class RouterNode extends Node {
     drawAttributes(context) {
         context.fillText('Router', this.x + this.offset, this.y - this.offset);
     }
+
+    get type() {
+        return NODE_TYPE.ROUTER;
+    }
 }

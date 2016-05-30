@@ -343,12 +343,18 @@ RelaxCanvas.prototype.stepAnimation = function () {
 RelaxCanvas.prototype.startSimulation = function () {
   var block = [];
   // get the starting block for each node of the simulation
-  for (var n of this.nodes) {
+  var routers = this.nodes.filter(function(n)   { return n.type == NODE_TYPE.ROUTER; });
+  var producers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.PRODUCER });
+  var consumers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.CONSUMER; });
+
+  var startFn =  function(n) {
     var s = n.start();
     if (s) {
       block.push(s);
     }
-  }
+  };
+  //  start first the routers, then the producers, and last the consumers
+  routers.map(startFn); producers.map(startFn); consumers.map(startFn)
   this.queue.push(block);
 };
 
