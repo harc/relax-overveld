@@ -8,17 +8,28 @@ var NODE_TYPE = {
 };
 
 class Node {
-    constructor ({x, y, optColor, parameter=75}={}) {
+    constructor ({x, y, parameter=75}={}) {
         this.x = x;
         this.y = y;
-        this.color = optColor || 'slateBlue';
         this.selectionIndices = [];
         this.name = 'Node' + getID();
         this.forwarder = new Forwarder(this);
         this.parameter = parameter;
+        this.radius = 8;
+        this.offset = 15;
     }
     
     serialize () {
         return [this.name, this.x, this.y, this.parameter].join(' ');
+    }
+    
+    draw (context) {
+        context.fillStyle = this.color;
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        context.closePath();
+        context.fill();
+        
+        this.drawAttributes(context);
     }
 }

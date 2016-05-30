@@ -2,7 +2,7 @@ class Consumer extends Node {
   constructor({name}) {
     super(arguments[0]);
     this.interest = new Interest(name);
-    this.color = 'slateBlue'
+    this.color = 'blue'
   }
 
   start() {
@@ -26,5 +26,20 @@ class Consumer extends Node {
     return NODE_TYPE.CONSUMER;
   }
 
+  drawAttributes(context) {
+    context.fillText('Interest: ' + this.interest.name.toUri(), this.x + this.offset, this.y - this.offset);
+    context.fillText('Consumer', this.x + this.offset, this.y - 2*this.offset);
+  }
+
+  fields() {
+    var interestField = {
+      label: 'Interest',
+      defaultValue: this.interest.name.toUri(),
+      onChange: e => this.interest = new Interest(e.target.value),
+    };
+    return [
+      interestField,
+    ];
+  }
 }
 
