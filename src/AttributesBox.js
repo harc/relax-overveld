@@ -14,13 +14,13 @@ class AttributesBox {
     }
     
     draw () {
-        this.addLabel('Name ');
         this.addTextInput({
+            label: 'Name',
             defaultValue: this.node.name,
             onChange: e => this.node.name = e.target.value,
         });
-        this.addBreak();
         this.addRangeInput({
+            label: 'Param',
             defaultValue: this.node.parameter,
             onChange: e => this.node.parameter = e.target.value,
             min: 0,
@@ -32,28 +32,36 @@ class AttributesBox {
     
     addLabel(label) {
         var element = document.createElement('label');
-        element.innerHTML = label;
-        this.box.appendChild(element);
+        element.innerHTML = label + ' ';
+        this.render(element);
     }
     
-    addTextInput({defaultValue, onChange}={}) {
+    addTextInput({label, defaultValue, onChange}={}) {
+        this.addLabel(label);
         var input = document.createElement('input');
         input.setAttribute('value', defaultValue);
         input.onkeyup = onChange;
-        this.box.appendChild(input);
+        this.render(input);
+        this.addBreak();
     }
     
     addBreak() {
-        this.box.appendChild(document.createElement('br'));
+        this.render(document.createElement('br'));
     }
     
-    addRangeInput({defaultValue, onChange, min=0, max=100}={}) {
+    addRangeInput({label, defaultValue, onChange, min=0, max=100}={}) {
+        this.addLabel(label);
         var range = document.createElement('input');
         range.setAttribute('type', 'range');
         range.setAttribute('value', defaultValue);
         range.setAttribute('min', min);
         range.setAttribute('max', max);
         range.oninput = onChange;
-        this.box.appendChild(range);
+        this.render(range);
+        this.addBreak();
+    }
+    
+    render(element) {
+        this.box.appendChild(element);
     }
 }

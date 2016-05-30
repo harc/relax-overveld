@@ -410,7 +410,7 @@ RelaxCanvas.prototype.redraw = function() {
   this.ctxt.fillStyle = 'white';
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
   this.edges.forEach(function(l) { self.drawLine(l); });
-  this.nodes.forEach(function(p) { self.drawPoint(p); });
+  this.nodes.forEach(_ => _.draw(this.ctxt));
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
   
   (new Serialization(this.ctxt)).draw({nodes: this.nodes, edges: this.edges});
