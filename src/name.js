@@ -11,6 +11,31 @@ class Name {
 
   toUri() {
     return new String(this.name);
-  }
+  };
+
+  set() {
+    return this.name;
+  };
+
+  // assuming that this.name does not have a trailing "/"
+  // assuming that the components argument does not start with a "/" and
+  // does not end with a "/"
+  append(components) {
+    this.name = this.name.concat("/", components);
+  };
+
+  clear() {
+    this.name = "";
+  };
+
+  appendNumber(number) {
+    this.name = this.name.concat("/", number);
+  };
+
+  empty() {
+    if (this.name = "") {
+      return true;
+    }
+    return false;
+  };
 }
-  
