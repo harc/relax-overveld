@@ -1,5 +1,7 @@
-var ID = 0;
-var getID = () => ID++;
+var NODE_ID = 0;
+var getNodeID = () => NODE_ID++;
+var EDGE_ID = 0;
+var getEdgeID = () => EDGE_ID++;
 
 function RelaxCanvas(relax, canvas) {
   this.relax = relax;
@@ -340,6 +342,7 @@ RelaxCanvas.prototype.stepAnimation = function () {
 
 RelaxCanvas.prototype.startSimulation = function () {
   var block = [];
+  // get the starting block for each node of the simulation
   for (var n of this.nodes) {
     var s = n.start();
     if (s) {
@@ -350,6 +353,10 @@ RelaxCanvas.prototype.startSimulation = function () {
 };
 
 RelaxCanvas.prototype.step = function () {
+  // reset all the packet counters
+  for (var e of this.edges) {
+    e.reset();
+  }
   if (!this.queue.empty()) {
     var curr_block = this.queue.pop();
     var next = [];

@@ -13,7 +13,7 @@ class Node {
         this.x = x;
         this.y = y;
         this.selectionIndices = [];
-        this.name = 'Node' + getID();
+        this.name = 'Node' + getNodeID();
         this.parameter = parameter;
         this.radius = 8;
         this.offset = 15;

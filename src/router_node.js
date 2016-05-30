@@ -6,7 +6,7 @@ class RouterNode extends Node {
     constructor() {
         super(arguments[0]);
         this.color = 'black'
-        this.forwarder =  new Router();
+        this.forwarder =  new Router(this);
     }
 
     start() {

@@ -73,7 +73,10 @@ class Forwarder {
         if (block && block.length > 0) {
             return function() {
                 for (var s of block) {
-                    s.call()
+                    var n = s.call();
+                    if (n) {
+                        block.push(n);
+                    }
                 }
             }.bind(this)
         }
@@ -97,7 +100,10 @@ class Forwarder {
         if (block && block.length > 0) {
             return function() {
                 for (var s of block) {
-                    s.call()
+                    var n = s.call();
+                    if (n) {
+                        block.push(n);
+                    }
                 }
             }.bind(this)
         }
@@ -121,7 +127,10 @@ class Forwarder {
         if (block && block.length > 0) {
             return function() {
                 for (var s of block) {
-                    s.call()
+                    var n = s.call();
+                    if (n) {
+                        block.push(n);
+                    }
                 }
             }.bind(this)
         }
@@ -176,8 +185,9 @@ class LocalForwarder extends Forwarder {
 }
 
 class Router extends Forwarder {
-    constructor() {
+    constructor(node) {
         super(arguments[0]);
+        this.node = node;
     }
 
     registerPrefix(src, prefix) {
@@ -191,11 +201,17 @@ class Router extends Forwarder {
     }
 
     receiveInterest(link, interest) {
-        return super.sendInterest(link, interest);
+        return function() {
+            console.log(this.node.name + " forwarding Interest: " + JSON.stringify(interest) + " to "+  link.name);
+            return this.sendInterest(link, interest);
+        }.bind(this);
     }
 
     receiveData(link, data) {
-        return super.sendData(data.name, data);
+        return function() {
+            console.log(this.node.name + " forwarding Data: " + JSON.stringify(data) + " to "+  link.name);
+            return this.sendData(data.name, data);
+        }.bind(this);
     }
 
 }
