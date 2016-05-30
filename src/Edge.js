@@ -3,9 +3,16 @@
  */
 
 class Edge {
-    constructor(p1, p2) {
+    constructor(p1, p2, optCapacity) {
         this.p1 = p1;
         this.p2 = p2;
+        this.numPackets = 0;
+        this.name = 'Edge' + getEdgeID();
+        this.capacity = optCapacity || 1;
+    }
+
+    reset() {
+        this.numPackets = 0;
     }
     
     involvesNode(p) {
@@ -30,11 +37,17 @@ class Edge {
 
     sendInterest(src, interest) {
         var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
-        return dst.receiveInterest(this, interest);
+        this.numPackets++;
+        if (this.numPackets <= this.capacity) {
+            return dst.receiveInterest(this, interest);
+        }
     };
 
     sendData(src, data) {
         var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
-        return dst.receiveData(this, data);
+        this.numPackets++;
+        if (this.numPackets <= this.capacity) {
+            return dst.receiveData(this, data);
+        }
     };
 }

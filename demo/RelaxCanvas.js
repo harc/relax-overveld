@@ -1,5 +1,7 @@
-var ID = 0;
-var getID = () => ID++;
+var NODE_ID = 0;
+var getNodeID = () => NODE_ID++;
+var EDGE_ID = 0;
+var getEdgeID = () => EDGE_ID++;
 
 function RelaxCanvas(relax, canvas) {
   this.relax = relax;
@@ -223,16 +225,23 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   
   if (point) {
     if (this.typeMode) {
-      // Create a new node of the opposite type, delete the old point, redirect all the edges
-      var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
+
+      // Create a new node of the opposit type, delete the old point, redirect all the edges
+      var newType = point.type === NODE_TYPE.PRODUCER ? NODE_TYPE.CONSUMER
+                  : point.type === NODE_TYPE.CONSUMER ? NODE_TYPE.ROUTER
+                  : /* default */                       NODE_TYPE.PRODUCER;
+      // Create a new node of the next type, delete the old point, redirect all the edges
+      var newType = point.type === NODE_TYPE.PRODUCER ? NODE_TYPE.CONSUMER
+                  : point.type === NODE_TYPE.CONSUMER ? NODE_TYPE.ROUTER
+                  : /* default */                       NODE_TYPE.PRODUCER;
       var newPoint = this.addNode(point.x, point.y, newType);
-      newPoint.forwarder = point.forwarder;
       newPoint.forwarder.node = newPoint;
       newPoint.name = point.name;
       var edges = this.edges.filter(function (l) {
         return l.involvesNode(point);
       });
       for (var e of edges) {
+        newPoint.forwarder.addLink(e);
         if (e.p1 === point) {
           e.p1 = newPoint;
         }
@@ -333,13 +342,21 @@ RelaxCanvas.prototype.stepAnimation = function () {
 
 RelaxCanvas.prototype.startSimulation = function () {
   var block = [];
+  // get the starting block for each node of the simulation
   for (var n of this.nodes) {
-    block.push(n.start());
+    var s = n.start();
+    if (s) {
+      block.push(s);
+    }
   }
   this.queue.push(block);
 };
 
 RelaxCanvas.prototype.step = function () {
+  // reset all the packet counters
+  for (var e of this.edges) {
+    e.reset();
+  }
   if (!this.queue.empty()) {
     var curr_block = this.queue.pop();
     var next = [];
@@ -471,8 +488,10 @@ RelaxCanvas.prototype.redraw = function() {
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
-  var args = {x: x, y: y, optColor: optColor, name: optName || "/a"};
-  var n =  type == NODE_TYPE.PRODUCER ? new Producer(args)  : new Consumer(args);
+  var args = {x: x, y: y, optColor: optColor, name: optName || "/a" };
+  var n = type == NODE_TYPE.PRODUCER ? new Producer(args)
+        : type == NODE_TYPE.CONSUMER ? new Consumer(args)
+        : /* default */                new RouterNode(args);
   this.nodes.push(n);
   this.relax.add(n);
   return n;
@@ -536,7 +555,7 @@ RelaxCanvas.prototype.removeConstraint = function(unwanted) {
 
 RelaxCanvas.prototype.clear = function() {
   this.relax.clear();
-
+  this.simulationStarted = false;
   this.nodes = [];
   this.edges = [];
   this.constraints = [];
