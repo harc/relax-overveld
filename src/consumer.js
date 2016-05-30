@@ -26,5 +26,19 @@ class Consumer extends Node {
     return NODE_TYPE.CONSUMER;
   }
 
+  drawAttributes(context) {
+    context.fillText('Interest: ' + this.interest.name.toUri(), this.x + this.offset, this.y - this.offset);
+  }
+
+  fields() {
+    var interestField = {
+      label: 'Interest',
+      defaultValue: this.interest.name.toUri(),
+      onChange: e => this.interest = new Interest(e.target.value),
+    };
+    return [
+      interestField,
+    ];
+  }
 }
 
