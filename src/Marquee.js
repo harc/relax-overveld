@@ -79,7 +79,7 @@ class Marquee {
         this.nodes.forEach(node => {
             var newX = node.x - minX + x;
             var newY = node.y - minY + y;
-            var newNode = this.addNode(newX, newY);
+            var newNode = this.addNode(newX, newY, node.type);
             oldToNew.set(node, newNode);
         });
         // paste edges
