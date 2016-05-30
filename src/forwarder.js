@@ -7,6 +7,10 @@ class Forwarder {
         this.pit = [];
     };
 
+    shouldForward(interest) {
+        return !this.pit[interest.name.toUri()]
+    };
+
     addLink(link) {
         this.links.push(link);
     }
@@ -31,6 +35,7 @@ class Forwarder {
             var longestPrefix = this.fib[longestPrefixMatchIndex];
             var dst = this.dict[interestName];
             if (dst) {
+              // interest aggregation
               if (!this.pit[interestName]) {
                   this.pit[interestName] = [src];
                   return dst.sendInterest(this, interest);
@@ -40,7 +45,15 @@ class Forwarder {
               }
             }
         }
-      }
+        // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
+        // if (longestPrefixMatchIndex !== -1) {
+        //     var longestPrefix = this.fib[longestPrefixMatchIndex];
+        //     var link = this.dict[longestPrefix];
+        //     if (link) {
+        //         return link.sendInterest(this, interest);
+        //     }
+        // }
+    }
 
     receiveInterest(link, interest) {
         var interestName = interest.name.toUri();
@@ -66,14 +79,27 @@ class Forwarder {
             }
         }
         if (block && block.length > 0) {
-            return function() {
-                for (var s of block) {
-                    var n = s.call();
-                    if (n) {
-                        block.push(n);
-                    }
+            return new Block(block);
+        }
+        return undefined;
+    }
+
+    sendData(interestName, data) {
+        var intrestName = interestName.toUri();
+        var links = this.pit[interestName];
+        if (links) {
+            var block = [];
+            for (var link of links) {
+                var  n = link.sendData(this, data)
+                if (n) {
+                    block.push(n);
                 }
-            }.bind(this)
+
+            }
+            delete this.pit[interestName];
+        }
+        if (block && block.length > 0) {
+            return new Block(block);
         }
         return undefined;
     }
@@ -88,46 +114,11 @@ class Forwarder {
                 if (n) {
                     block.push(n);
                 }
-
             }
             delete this.pit[interestName];
         }
         if (block && block.length > 0) {
-            return function() {
-                for (var s of block) {
-                    var n = s.call();
-                    if (n) {
-                        block.push(n);
-                    }
-                }
-            }.bind(this)
-        }
-        return undefined;
-    }
-
-    sendData(interestName, data) {
-        var interestName = interestName.toUri();
-        var links = this.pit[interestName];
-        if (links) {
-            var block = [];
-            for (var link of links) {
-                var  n = link.sendData(this, data)
-                if (n) {
-                    block.push(n);
-                }
-
-            }
-            delete this.pit[interestName];
-        }
-        if (block && block.length > 0) {
-            return function() {
-                for (var s of block) {
-                    var n = s.call();
-                    if (n) {
-                        block.push(n);
-                    }
-                }
-            }.bind(this)
+            return new Block(block);
         }
         return undefined;
     }
@@ -197,16 +188,27 @@ class Router extends Forwarder {
 
     receiveInterest(link, interest) {
         return function() {
-            console.log(this.node.name + " forwarding Interest: " + JSON.stringify(interest) + " to "+  link.name);
+            if (this.shouldForward(interest)) {
+                console.log(this.node.name + " forwarding Interest: " + JSON.stringify(interest)
+                       + " to " + this.dict[interest.name.toUri()].name );
+            }
+            else {
+                console.log(this.node.name + " aggregated Interest: " + JSON.stringify(interest));
+            }
             return this.sendInterest(link, interest);
         }.bind(this);
     }
 
     receiveData(link, data) {
         return function() {
-            console.log(this.node.name + " forwarding Data: " + JSON.stringify(data) + " to "+  link.name);
+            var links = this.pit[data.name.toUri()];
+            var links_str = "{ "
+            for (var l of links) {
+                links_str += ( l.name + ", ");
+            }
+            links_str = links_str.replaceAt([links_str.length - 2], " }");
+            console.log(this.node.name + " forwarding Data: " + JSON.stringify(data) + " to "+ links_str);
             return this.sendData(data.name, data);
         }.bind(this);
     }
-
 }
