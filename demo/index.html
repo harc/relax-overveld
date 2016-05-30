@@ -6,6 +6,7 @@
   </head>
   <body>
     <script src="../3rdparty/pointerevents.js"></script>
+    <script src="../src/block.js"></script>
     <script src="../dist/relax.js"></script>
     <script src="../src/Marquee.js"></script>
     <script src="../src/Edge.js"></script>
@@ -40,10 +41,14 @@ var demos = document.getElementById('demos');
 
 var examples = {};
 
+String.prototype.replaceAt=function(index, character) {
+    return this.substr(0, index) + character + this.substr(index+character.length);
+};
+
 function showDemo(name) {
   examples[name]();
 }
-
+var block = document.getElementsByTagName('block');
 var queue = document.getElementsByTagName('Queue');
 
 var actions = document.getElementsByTagName('action');

@@ -30,6 +30,6 @@ class Node {
         context.closePath();
         context.fill();
         
-        this.drawAttributes(context);
+       // this.drawAttributes(context);
     }
 }
