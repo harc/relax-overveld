@@ -27,6 +27,8 @@ class AttributesBox {
             max: 100,
         });
         
+        this.node.fields().forEach(_ => this.addTextInput(_));
+        
         document.body.appendChild(this.box);
     }
     

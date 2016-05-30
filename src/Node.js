@@ -16,6 +16,7 @@ class Node {
         this.forwarder = new Forwarder(this);
         this.parameter = parameter;
         this.radius = 8;
+        this.offset = 15;
     }
     
     serialize () {
@@ -28,5 +29,7 @@ class Node {
         context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         context.closePath();
         context.fill();
+        
+        this.drawAttributes(context);
     }
 }
