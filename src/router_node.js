@@ -13,7 +13,13 @@ class RouterNode extends Node {
     }
     
     drawAttributes(context) {
-        context.fillText('Router', this.x + this.offset, this.y - this.offset);
+        context.fillText('Router: ' + this.name, this.x + this.offset, this.y - this.offset);
+    }
+    
+    fields() {
+        return [
+            Field.name(this),
+        ];
     }
 
     get type() {

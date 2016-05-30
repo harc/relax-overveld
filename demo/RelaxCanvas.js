@@ -184,10 +184,6 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
   return square(this.pointRadius) >= square(x - p.x) + square(y - p.y);
 };
 
-RelaxCanvas.prototype.showAttributes = function (node) {
-  (new AttributesBox(node)).draw();
-};
-
 RelaxCanvas.prototype.startMarquee = function ({x, y}={}) {
   this.marquee = new Marquee({
         x: x,
@@ -226,10 +222,6 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   if (point) {
     if (this.typeMode) {
 
-      // Create a new node of the opposit type, delete the old point, redirect all the edges
-      var newType = point.type === NODE_TYPE.PRODUCER ? NODE_TYPE.CONSUMER
-                  : point.type === NODE_TYPE.CONSUMER ? NODE_TYPE.ROUTER
-                  : /* default */                       NODE_TYPE.PRODUCER;
       // Create a new node of the next type, delete the old point, redirect all the edges
       var newType = point.type === NODE_TYPE.PRODUCER ? NODE_TYPE.CONSUMER
                   : point.type === NODE_TYPE.CONSUMER ? NODE_TYPE.ROUTER
@@ -251,7 +243,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
       }
       this.removePoint(point);
     } else if (this.attributesMode) {
-      this.showAttributes(point);
+      point.attributesBox.toggle();
     } else if (this.deleteMode) {
       this.removePoint(point);
     } else {
@@ -382,24 +374,6 @@ RelaxCanvas.prototype.step = function () {
 };
 
 // -----------------------------------------------------
-
-RelaxCanvas.prototype.drawPoint = function(p) {
-  if (p.isSelected) {
-    this.ctxt.fillStyle = 'yellow';
-  } else if (p.type == NODE_TYPE.PRODUCER ) {
-    this.ctxt.fillStyle = 'red';
-  } else {
-    this.ctxt.fillStyle = p.color;
-  }
-
-  this.ctxt.beginPath();
-  this.ctxt.arc(p.x, p.y, this.pointRadius, 0, 2 * Math.PI);
-  this.ctxt.closePath();
-  this.ctxt.fill();
-  if (p.selectionIndices.length > 0) {
-    this.drawSelectionIndices(p);
-  }
-};
 
 RelaxCanvas.prototype.drawSelectionIndices = function(p) {
   var text = p.selectionIndices.join(', ');

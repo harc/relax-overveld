@@ -4,28 +4,31 @@
 
 class AttributesBox {
     constructor(node) {
-        this.box = document.createElement("div");
         this.node = node;
-
+        this.id = 'attrBox-' + this.node.name;
+    }
+    
+    toggle() {
+        var box = document.getElementById(this.id);
+        if (box) this.hide(); else this.show();
+    }
+    
+    hide () {
+        document.body.removeChild(document.getElementById(this.id));
+    }
+    
+    show() {
+        this.build();
+        document.body.appendChild(this.box);
+    }
+    
+    build () {
+        this.box = document.createElement("div");
         var offset = 10;
         this.box.style.top = this.node.y + offset;
         this.box.style.left = this.node.x + offset;
         this.box.style.position = 'absolute';
-    }
-    
-    draw () {
-        this.addTextInput({
-            label: 'Name',
-            defaultValue: this.node.name,
-            onChange: e => this.node.name = e.target.value,
-        });
-        this.addRangeInput({
-            label: 'Param',
-            defaultValue: this.node.parameter,
-            onChange: e => this.node.parameter = e.target.value,
-            min: 0,
-            max: 100,
-        });
+        this.box.id = this.id;
         
         this.node.fields().forEach(_ => this.addTextInput(_));
         

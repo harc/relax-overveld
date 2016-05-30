@@ -25,17 +25,13 @@ class Producer extends Node {
   
   drawAttributes(context) {
     context.fillText('Data: ' + this.data.name.toUri(), this.x + this.offset, this.y - this.offset);
-    context.fillText('Producer', this.x + this.offset, this.y - 2*this.offset);
+    context.fillText('Producer: ' + this.name, this.x + this.offset, this.y - 2*this.offset);
   }
   
   fields() {
-    var dataField = {
-      label: 'Data',
-      defaultValue: this.data.name.toUri(),
-      onChange: e => this.data = new Data(e.target.value),
-    };
     return [
-      dataField,
+      Field.name(this),
+      Field.data(this),
     ];
   }
 }
