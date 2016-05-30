@@ -38,4 +38,22 @@ class Name {
     }
     return false;
   };
+
+  size() {
+    nameString = this.name.toUri();
+    var arrayOfComponents = nameString.split("/");
+    return arrayOfComponents.length;
+  };
+
+  at(index) {
+    nameString = this.name.toUri();
+    var arrayOfComponents = nameString.split("/");
+    return arrayOfComponents[index];
+  };
+
+  equal(name) {
+    nameString1 = this.name.toUri();
+    nameString2 = name.toUri();
+    return nameString1 === nameString2;
+  };
 }
