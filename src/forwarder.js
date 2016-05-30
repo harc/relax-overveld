@@ -29,6 +29,11 @@ class Forwarder {
         var dst = this.dict[interestName];
         if (dst) {
             if (!this.pit[interestName]) {
+                this.pit[interestName] = [];
+            }
+            this.pit[interestName].push(src);
+            return dst.sendInterest(this, interest);
+            if (!this.pit[interestName]) {
                 this.pit[interestName] = [src];
                 return dst.sendInterest(this, interest);
             }
@@ -64,11 +69,28 @@ class Forwarder {
         if (links) {
             var block = [];
             for (var link of links) {
-                var n = link.receiveData(data)
-                if (n) {
-                    block.push(n);
-                }
+                block.push(link.receiveData(data));
             }
+        }
+        if (block && block.length > 0) {
+            return function() {
+                for (var s of block) {
+                    s.call()
+                }
+            }.bind(this)
+        }
+        return undefined;
+    }
+
+    sendData(interestName, data) {
+        var interestName = interestName.toUri();
+        var links = this.pit[interestName];
+        if (links) {
+            var block = [];
+            for (var link of links) {
+                block.push(link.sendData(this, data));
+            }
+            delete this.pit[interestName];
         }
         if (block && block.length > 0) {
             return function() {
