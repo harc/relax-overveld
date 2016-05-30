@@ -28,11 +28,7 @@ class Forwarder {
         var interestName = interest.name.toUri();
         var dst = this.dict[interestName];
         if (dst) {
-            if (!this.pit[interestName]) {
-                this.pit[interestName] = [];
-            }
-            this.pit[interestName].push(src);
-            return dst.sendInterest(this, interest);
+            // interest aggregation
             if (!this.pit[interestName]) {
                 this.pit[interestName] = [src];
                 return dst.sendInterest(this, interest);
@@ -40,7 +36,6 @@ class Forwarder {
             else {
                 this.pit[interestName].push(src);
             }
-
         }
         // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         // if (longestPrefixMatchIndex !== -1) {
@@ -69,7 +64,10 @@ class Forwarder {
         if (links) {
             var block = [];
             for (var link of links) {
-                block.push(link.receiveData(data));
+                var n = link.receiveData(data)
+                if (n) {
+                    block.push(n);
+                }
             }
         }
         if (block && block.length > 0) {
@@ -88,7 +86,11 @@ class Forwarder {
         if (links) {
             var block = [];
             for (var link of links) {
-                block.push(link.sendData(this, data));
+                var  n = link.sendData(this, data)
+                if (n) {
+                    block.push(n);
+                }
+
             }
             delete this.pit[interestName];
         }

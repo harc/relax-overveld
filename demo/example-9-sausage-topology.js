@@ -1,8 +1,8 @@
 examples.Nine_Node_Sausage_Topology = function() {
   var p1 = rc.addNode(200,  200, NODE_TYPE.PRODUCER);
   var p2 = rc.addNode(300,  200, NODE_TYPE.ROUTER);
-  var p3 = rc.addNode(300,  200, NODE_TYPE.ROUTER);
-  var p4 = rc.addNode(300,  200, NODE_TYPE.ROUTER);
+  var p3 = rc.addNode(400,  200, NODE_TYPE.ROUTER);
+  var p4 = rc.addNode(500,  200, NODE_TYPE.ROUTER);
   var p5 = rc.addNode(600,  200, NODE_TYPE.ROUTER);
   var p6 = rc.addNode(700,  200, NODE_TYPE.ROUTER);
   var p7 = rc.addNode(800,  200, NODE_TYPE.ROUTER);
