@@ -25,9 +25,13 @@ class Forwarder {
     }
 
     sendInterest(src, interest) {
-        var dst = this.dict[interest.name.toUri()];
+        var interestName = interest.name.toUri();
+        var dst = this.dict[interestName];
         if (dst) {
-            this.pit[interest.name] = src;
+            if (!this.pit[interestName]) {
+                this.pit[interestName] = [];
+            }
+            this.pit[interestName].push(src);
             return dst.sendInterest(this, interest);
         }
         // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
@@ -41,31 +45,44 @@ class Forwarder {
     }
 
     receiveInterest(link, interest) {
-        if (!this.pit[interest]) {
-            this.pit[interest] = [];
+        var interestName = interest.name.toUri();
+        if (!this.pit[interestName]) {
+            this.pit[interestName] = [];
         }
-        this.pit[interest].push(link);
-        var dst = this.dict[interest.name.toUri()];
+        this.pit[interestName].push(link);
+        var dst = this.dict[interestName];
         if (dst) {
             return dst.receiveInterest(interest);
         }
     }
 
     receiveData(link, data) {
-        var dst = this.pit[data.name];
-        if (dst) {
-            return dst.receiveData(data);
+        var links = this.pit[data.name.toUri()];
+        if (links) {
+            var block = [];
+            for (var link of links) {
+                block.push(link.receiveData(data));
+            }
         }
+        if (block && block.length > 0) {
+            return function() {
+                for (var s of block) {
+                    s.call()
+                }
+            }.bind(this)
+        }
+        return undefined;
     }
 
-    sendData(interest, data) {
-        var links = this.pit[interest];
+    sendData(interestName, data) {
+        var interestName = interestName.toUri();
+        var links = this.pit[interestName];
         if (links) {
             var block = [];
             for (var link of links) {
                 block.push(link.sendData(this, data));
             }
-            delete this.pit[interest];
+            delete this.pit[interestName];
         }
         if (block && block.length > 0) {
             return function() {
@@ -122,4 +139,29 @@ class LocalForwarder extends Forwarder {
     sendInterest(interest) {
         return super.sendInterest(this.node, interest);
     }
+}
+
+class Router extends Forwarder {
+    constructor() {
+        super(arguments[0]);
+    }
+
+    registerPrefix(src, prefix) {
+        this.fib.push(prefix);
+        this.dict[prefix.toUri()] = src;
+        for (var link of this.links) {
+            if (link != src) {
+                link.registerPrefix(this, prefix);
+            }
+        }
+    }
+
+    receiveInterest(link, interest) {
+        return super.sendInterest(link, interest);
+    }
+
+    receiveData(link, data) {
+        return super.sendData(data.name, data);
+    }
+
 }

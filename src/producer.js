@@ -2,6 +2,7 @@ class Producer extends Node {
   constructor({name}) {
     super(arguments[0]);
     this.data = new Data(name);
+    this.forwarder = new LocalForwarder(this);
     this.color = 'red';
   };
 
@@ -18,7 +19,7 @@ class Producer extends Node {
   receiveInterest(interest) {
     return function() {
       console.log(this.name + " received Interest: " + JSON.stringify(interest));
-      return this.forwarder.sendData(interest, this.data)
+      return this.forwarder.sendData(interest.name, this.data)
     }.bind(this);
   };
   

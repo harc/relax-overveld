@@ -5,6 +5,7 @@
 var NODE_TYPE = {
     CONSUMER : {value: 0, name: "Consumer", code: "C"},
     PRODUCER : {value: 1, name: "Producer", code: "P"},
+    ROUTER   : {value: 2, name: "Router",   code: "R"},
 };
 
 class Node {
@@ -13,7 +14,6 @@ class Node {
         this.y = y;
         this.selectionIndices = [];
         this.name = 'Node' + getID();
-        this.forwarder = new LocalForwarder(this);
         this.parameter = parameter;
         this.radius = 8;
         this.offset = 15;

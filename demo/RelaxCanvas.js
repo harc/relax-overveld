@@ -223,8 +223,10 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   
   if (point) {
     if (this.typeMode) {
-      // Create a new node of the opposite type, delete the old point, redirect all the edges
-      var newType = point.type === NODE_TYPE.PRODUCER ?  NODE_TYPE.CONSUMER : NODE_TYPE.PRODUCER;
+      // Create a new node of the next type, delete the old point, redirect all the edges
+      var newType = point.type === NODE_TYPE.PRODUCER ? NODE_TYPE.CONSUMER
+                  : point.type === NODE_TYPE.CONSUMER ? NODE_TYPE.ROUTER
+                  : /* default */                       NODE_TYPE.PRODUCER;
       var newPoint = this.addNode(point.x, point.y, newType);
       newPoint.forwarder = point.forwarder;
       newPoint.forwarder.node = newPoint;
@@ -334,7 +336,10 @@ RelaxCanvas.prototype.stepAnimation = function () {
 RelaxCanvas.prototype.startSimulation = function () {
   var block = [];
   for (var n of this.nodes) {
-    block.push(n.start());
+    var s = n.start();
+    if (s) {
+      block.push(s);
+    }
   }
   this.queue.push(block);
 };
@@ -472,7 +477,9 @@ RelaxCanvas.prototype.redraw = function() {
 
 RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
   var args = {x: x, y: y, optColor: optColor, name: optName || "/a"};
-  var n =  type == NODE_TYPE.PRODUCER ? new Producer(args)  : new Consumer(args);
+  var n = type == NODE_TYPE.PRODUCER ? new Producer(args)
+        : type == NODE_TYPE.CONSUMER ? new Consumer(args)
+        : /* default */                new RouterNode(args);
   this.nodes.push(n);
   this.relax.add(n);
   return n;
@@ -536,7 +543,7 @@ RelaxCanvas.prototype.removeConstraint = function(unwanted) {
 
 RelaxCanvas.prototype.clear = function() {
   this.relax.clear();
-
+  this.simulationStarted = false;
   this.nodes = [];
   this.edges = [];
   this.constraints = [];
