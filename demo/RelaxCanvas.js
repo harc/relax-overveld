@@ -228,13 +228,13 @@ RelaxCanvas.prototype.pointerdown = function(e) {
                   : point.type === NODE_TYPE.CONSUMER ? NODE_TYPE.ROUTER
                   : /* default */                       NODE_TYPE.PRODUCER;
       var newPoint = this.addNode(point.x, point.y, newType);
-      newPoint.forwarder = point.forwarder;
       newPoint.forwarder.node = newPoint;
       newPoint.name = point.name;
       var edges = this.edges.filter(function (l) {
         return l.involvesNode(point);
       });
       for (var e of edges) {
+        newPoint.forwarder.addLink(e);
         if (e.p1 === point) {
           e.p1 = newPoint;
         }
@@ -476,7 +476,7 @@ RelaxCanvas.prototype.redraw = function() {
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
-  var args = {x: x, y: y, optColor: optColor, name: optName || "/a"};
+  var args = {x: x, y: y, optColor: optColor, name: optName || "/a" };
   var n = type == NODE_TYPE.PRODUCER ? new Producer(args)
         : type == NODE_TYPE.CONSUMER ? new Consumer(args)
         : /* default */                new RouterNode(args);

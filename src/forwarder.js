@@ -29,10 +29,13 @@ class Forwarder {
         var dst = this.dict[interestName];
         if (dst) {
             if (!this.pit[interestName]) {
-                this.pit[interestName] = [];
+                this.pit[interestName] = [src];
+                return dst.sendInterest(this, interest);
             }
-            this.pit[interestName].push(src);
-            return dst.sendInterest(this, interest);
+            else {
+                this.pit[interestName].push(src);
+            }
+
         }
         // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         // if (longestPrefixMatchIndex !== -1) {
@@ -61,7 +64,10 @@ class Forwarder {
         if (links) {
             var block = [];
             for (var link of links) {
-                block.push(link.receiveData(data));
+                var n = link.receiveData(data)
+                if (n) {
+                    block.push(n);
+                }
             }
         }
         if (block && block.length > 0) {
@@ -80,7 +86,11 @@ class Forwarder {
         if (links) {
             var block = [];
             for (var link of links) {
-                block.push(link.sendData(this, data));
+                var  n = link.sendData(this, data)
+                if (n) {
+                    block.push(n);
+                }
+
             }
             delete this.pit[interestName];
         }
@@ -105,19 +115,19 @@ class Forwarder {
             var entryNameComponents = fibEntry.toUri().split("/");
             //console.log(entryNameComponents);
             for (var i = 0; i < arrayOfNameComponents.length; i++) {
-              if (entryNameComponents[i] === arrayOfNameComponents[i]) {
-                // console.log(entryNameComponents[i]);
-                // console.log(arrayOfNameComponents[i]);
-                currentMatchedComponents += 1;
-              }
-              else {
-                  currentMatchedComponents = -2;
-                  break;
-              }
+                if (entryNameComponents[i] === arrayOfNameComponents[i]) {
+                    // console.log(entryNameComponents[i]);
+                    // console.log(arrayOfNameComponents[i]);
+                    currentMatchedComponents += 1;
+                }
+                else {
+                    currentMatchedComponents = -2;
+                    break;
+                }
             }
             if (currentMatchedComponents >= maximumMatchedComponents) {
-              maximumMatchedComponents = currentMatchedComponents;
-              longestPrefixMatchIndex = fibEntryCounter;
+                maximumMatchedComponents = currentMatchedComponents;
+                longestPrefixMatchIndex = fibEntryCounter;
             }
         }
         return longestPrefixMatchIndex;
