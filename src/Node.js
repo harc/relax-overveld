@@ -17,6 +17,7 @@ class Node {
         this.parameter = parameter;
         this.radius = 8;
         this.offset = 15;
+        this.attributesBox = new AttributesBox(this);
     }
     
     serialize () {
@@ -30,6 +31,10 @@ class Node {
         context.closePath();
         context.fill();
         
-       // this.drawAttributes(context);
+       this.drawAttributes(context);
+    }
+    
+    drawAttributes() {
+        throw "all subclasses of Node must implement .drawAttributes(context)";
     }
 }
