@@ -40,10 +40,10 @@ class Edge {
         return [this.p1.name, this.p2.name].join(' ');
     }
 
-    registerPrefix(src, prefix) {
+    registerPrefix(src, announcement) {
         var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
-        console.log(src.node.name + " announcing " + prefix.toUri() + " to " + dst.node.name);
-        return dst.registerPrefix(this, prefix)
+        console.log(src.node.name + " announcing " + announcement.prefix.toUri() + " to " + dst.node.name);
+        return dst.registerPrefix(this, announcement);
     };
 
     sendInterest(src, interest) {

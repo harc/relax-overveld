@@ -2,6 +2,11 @@ var NODE_ID = 0;
 var getNodeID = () => NODE_ID++;
 var EDGE_ID = 0;
 var getEdgeID = () => EDGE_ID++;
+var getNounce = function() {
+  return Math.random() * 982451653;
+}
+
+
 
 function RelaxCanvas(relax, canvas) {
   this.relax = relax;
