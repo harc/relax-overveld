@@ -17,15 +17,23 @@ class Forwarder {
 
     announcePrefix(src, prefix) {
         for (var link of this.links) {
-            if (link != src) {
+            // do not forward to any link we learned this from
+            if (!this.dict[prefix.toUri()].includes(link))
+            {
                 link.registerPrefix(this, prefix);
             }
         }
     }
 
     registerPrefix(link, prefix) {
-        this.fib.push(prefix);
-        this.dict[prefix.toUri()] = link;
+        if (!this.dict[prefix.toUri()]) {
+            this.dict[prefix.toUri()] = [link];
+            this.fib.push(prefix);
+        }
+        else if (!this.dict[prefix.toUri()].includes(link)) {
+            this.dict[prefix.toUri()].push(link);
+            this.fib.push(prefix);
+        }
     }
 
     sendInterest(src, interest) {
@@ -33,7 +41,8 @@ class Forwarder {
         var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         if (longestPrefixMatchIndex !== -1) {
             var longestPrefix = this.fib[longestPrefixMatchIndex];
-            var dst = this.dict[interestName];
+            // TODO multipath forwarding
+            var dst = this.dict[interestName][0];
             if (dst) {
               // interest aggregation
               if (!this.pit[interestName]) {
@@ -45,14 +54,6 @@ class Forwarder {
               }
             }
         }
-        // var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
-        // if (longestPrefixMatchIndex !== -1) {
-        //     var longestPrefix = this.fib[longestPrefixMatchIndex];
-        //     var link = this.dict[longestPrefix];
-        //     if (link) {
-        //         return link.sendInterest(this, interest);
-        //     }
-        // }
     }
 
     receiveInterest(link, interest) {
@@ -61,7 +62,8 @@ class Forwarder {
             this.pit[interestName] = [];
         }
         this.pit[interestName].push(link);
-        var dst = this.dict[interestName];
+        // TODO multipath forwarding
+        var dst = this.dict[interestName][0];
         if (dst) {
             return dst.receiveInterest(interest);
         }
@@ -177,20 +179,16 @@ class Router extends Forwarder {
     }
 
     registerPrefix(src, prefix) {
-        this.fib.push(prefix);
-        this.dict[prefix.toUri()] = src;
-        for (var link of this.links) {
-            if (link != src) {
-                link.registerPrefix(this, prefix);
-            }
-        }
+        super.registerPrefix(src, prefix);
+        return super.announcePrefix(src, prefix);
     }
 
     receiveInterest(link, interest) {
         return function() {
             if (this.shouldForward(interest)) {
+                // TODO multi-path forwarding
                 console.log(this.node.name + " forwarding Interest: " + JSON.stringify(interest)
-                       + " to " + this.dict[interest.name.toUri()].name );
+                       + " to " + this.dict[interest.name.toUri()][0].name );
             }
             else {
                 console.log(this.node.name + " aggregated Interest: " + JSON.stringify(interest));
