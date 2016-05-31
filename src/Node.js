@@ -21,7 +21,12 @@ class Node {
     }
     
     serialize () {
-        return [this.name, this.x, this.y, this.parameter].join(' ');
+        return [
+            this.name,
+            Math.floor(this.x),
+            Math.floor(this.y),
+            this.parameter,
+        ].join(' ');
     }
     
     draw (context) {
