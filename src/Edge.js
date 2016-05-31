@@ -42,6 +42,7 @@ class Edge {
 
     registerPrefix(src, prefix) {
         var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
+        console.log(src.node.name + " announcing " + prefix.toUri() + " to " + dst.node.name);
         return dst.registerPrefix(this, prefix)
     };
 

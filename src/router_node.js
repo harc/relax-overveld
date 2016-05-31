@@ -25,4 +25,8 @@ class RouterNode extends Node {
     get type() {
         return NODE_TYPE.ROUTER;
     }
+
+    get type() {
+        return NODE_TYPE.ROUTER;
+    }
 }
