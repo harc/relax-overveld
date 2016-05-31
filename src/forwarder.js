@@ -5,6 +5,8 @@ class Forwarder {
         // dictionary of prefixes to links
         this.dict = [];
         this.pit = [];
+        // in-network cache
+        this.cache = [];
     };
 
     shouldForward(interest) {
@@ -62,6 +64,10 @@ class Forwarder {
             this.pit[interestName] = [];
         }
         this.pit[interestName].push(link);
+        // in-network cache look up
+        if (this.cache[interestName] !== undefined) {
+          this.sendData(interest.name, this.cache[interestName]);
+        }
         // TODO multipath forwarding
         var dst = this.dict[interestName][0];
         if (dst) {
@@ -71,6 +77,9 @@ class Forwarder {
 
     receiveData(link, data) {
         var links = this.pit[data.name.toUri()];
+        // store data in cache
+        this.cache[data.name.toUri()] = data;
+        
         if (links) {
             var block = [];
             for (var link of links) {
