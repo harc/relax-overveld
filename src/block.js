@@ -23,4 +23,10 @@ Block.prototype.call =  function() {
 
 Block.prototype.push = function (step) {
     this.block.push(step);
+    return this;
+};
+
+Block.prototype.pop = function (step) {
+    this.block.pop(step);
+    return this;
 };

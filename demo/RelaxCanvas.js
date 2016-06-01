@@ -203,6 +203,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
   var pointIdx;
+  selectedNode = undefined;
   this.nodes.forEach(function(p, idx) {
     if (self.pointContains(p, e.clientX, e.clientY)) {
       point = p;
@@ -225,6 +226,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   }
   
   if (point) {
+    selectedNode = point;
     if (this.typeMode) {
 
       // Create a new node of the next type, delete the old point, redirect all the edges
