@@ -60,6 +60,7 @@ class Forwarder {
 
     receiveInterest(link, interest) {
         var interestName = interest.name.toUri();
+        interest.incrementHopCount();
         if (!this.pit[interestName]) {
             this.pit[interestName] = [];
         }
@@ -203,6 +204,7 @@ class Router extends Forwarder {
         return function() {
             if (this.shouldForward(interest)) {
                 // TODO multi-path forwarding
+                interest.incrementHopCount();
                 console.log(this.node.name + " forwarding Interest: " + JSON.stringify(interest)
                        + " to " + this.dict[interest.name.toUri()][0].name );
             }
