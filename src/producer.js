@@ -19,15 +19,16 @@ class Producer extends Node {
   receiveInterest(interest) {
     return function() {
       console.log(this.name + " received Interest: " + JSON.stringify(interest));
+      this.data.setHopCount(interest.getHopCount());
       return this.forwarder.sendData(interest.name, this.data)
     }.bind(this);
   };
-  
+
   drawAttributes(context) {
     context.fillText('Data: ' + this.data.name.toUri(), this.x + this.offset, this.y - this.offset);
     context.fillText('Producer: ' + this.name, this.x + this.offset, this.y - 2*this.offset);
   }
-  
+
   fields() {
     return [
       Field.name(this),
