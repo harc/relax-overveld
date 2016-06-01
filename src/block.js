@@ -1,8 +1,5 @@
 var Block = function(block) {
-    if (block.length == 1) {
-        return block[0];
-    }
-    this.block = block;
+    this.block = block || []    ;
 };
 
 Block.prototype = new Function();
@@ -10,7 +7,7 @@ Block.prototype = new Function();
 Block.prototype.call =  function() {
     var next_block = [];
     for (var s of this.block) {
-        var n = s.call();
+        var n = s.apply(this, arguments);
         if (n) {
             next_block.push(n);
         }
@@ -20,7 +17,10 @@ Block.prototype.call =  function() {
         if (block.length == 1) {
             return block[0];
         }
-        this.block = block;
-        return this;
+        return new Block(block);
     }
-}
+};
+
+Block.prototype.push = function (step) {
+    this.block.push(step);
+};
