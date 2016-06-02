@@ -7,6 +7,12 @@ class Forwarder {
         this.pit = [];
         // in-network cache
         this.cache = [];
+        // broadcast strategy
+        this.broadcast = false;
+    };
+
+    setBroadcastStrategy(attr) {
+      this.broadcast = attr;
     };
 
     shouldForward(interest) {
@@ -43,20 +49,46 @@ class Forwarder {
         var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         if (longestPrefixMatchIndex !== -1) {
             var longestPrefix = this.fib[longestPrefixMatchIndex];
-            // TODO multipath forwarding
-            var dst = this.dict[interestName][0];
-            if (dst) {
-              // interest aggregation
-              if (!this.pit[interestName]) {
-                  this.pit[interestName] = [src];
-                  return dst.sendInterest(this, interest);
-              }
-              else {
-                  this.pit[interestName].push(src);
-              }
+            // multipath forwarding
+            if (this.broadcast) {
+              this.broadcastInterest(src, interest);
+            }
+            else {
+                var dst = this.dict[interestName][0];
+                if (dst) {
+                  // interest aggregation
+                  if (!this.pit[interestName]) {
+                      this.pit[interestName] = [src];
+                      return dst.sendInterest(this, interest);
+                  }
+                  else {
+                      this.pit[interestName].push(src);
+                  }
+                }
             }
         }
     }
+
+    broadcastInterest(src, interest) {
+      var interestName = interest.name.toUri();
+      for (var link in this.links) {
+        if (this.links[link] != src) {
+          if (!this.pit[interestName]) {
+              this.pit[interestName] = [this.links[link]];
+              console.log("sending to: " + this.links[link]);
+              //this.links[link].sendInterest(this, interest);
+          }
+          else {
+              var element = this.pit[interestName];
+              console.log("Element: " + element);
+              var elementToPush = element.push(this.links[link]);
+              this.pit[interestName] = elementToPush;
+              console.log("Pit state: " + elementToPush);
+              //this.links[link].sendInterest(this, interest);
+          }
+        }
+      }
+    };
 
     receiveInterest(link, interest) {
         var interestName = interest.name.toUri();
