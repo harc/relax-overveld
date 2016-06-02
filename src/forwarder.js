@@ -9,6 +9,14 @@ class Forwarder {
         this.cache = [];
         // broadcast strategy
         this.broadcast = false;
+        // Interest counters
+        this.InterestsReceived = 0;
+        this.InterestsDropped = 0;
+        this.InterestsForwarded = 0;
+        // Data counters
+        this.DataReceived = 0;
+        this.DataDropped = 0;
+        this.DataForwarded = 0;
     };
 
     setBroadcastStrategy(attr) {
@@ -51,6 +59,7 @@ class Forwarder {
             var longestPrefix = this.fib[longestPrefixMatchIndex];
             // multipath forwarding
             if (this.broadcast) {
+              this.InterestsForwarded++;
               this.broadcastInterest(src, interest);
             }
             else {
@@ -59,6 +68,7 @@ class Forwarder {
                   // interest aggregation
                   if (!this.pit[interestName]) {
                       this.pit[interestName] = [src];
+                      this.InterestsForwarded++;
                       return dst.sendInterest(this, interest);
                   }
                   else {
@@ -66,6 +76,9 @@ class Forwarder {
                   }
                 }
             }
+        }
+        else {
+          this.InterestsDropped++;
         }
     }
 
@@ -95,12 +108,14 @@ class Forwarder {
 
     receiveInterest(link, interest) {
         var interestName = interest.name.toUri();
+        this.InterestsReceived++;
         interest.incrementHopCount();
         if (!this.pit[interestName]) {
             this.pit[interestName] = [];
         }
         this.pit[interestName].push(link);
         // in-network cache lookup
+        this.InterestsForwarded++;
         this.csLookup(interest);
         // TODO multipath forwarding
         var dst = this.dict[interestName][0];
@@ -150,7 +165,11 @@ class Forwarder {
                 }
 
             }
+            this.DataForwarded++;
             delete this.pit[interestName];
+        }
+        else {
+            this.DataDropped++;
         }
         if (block && block.length > 0) {
             return new Block(block);
@@ -169,7 +188,11 @@ class Forwarder {
                     block.push(n);
                 }
             }
+            this.DataForwarded++;
             delete this.pit[interestName];
+        }
+        else {
+            this.DataDropped++;
         }
         if (block && block.length > 0) {
             return new Block(block);
@@ -237,6 +260,7 @@ class Router extends Forwarder {
 
     receiveInterest(link, interest) {
         return function() {
+            this.InterestsReceived++;
             if (this.shouldForward(interest)) {
                 // TODO multi-path forwarding
                 interest.incrementHopCount();
@@ -252,6 +276,7 @@ class Router extends Forwarder {
 
     receiveData(link, data) {
         return function() {
+            this.DataReceived++;
             var links = this.pit[data.name.toUri()];
             var links_str = "{ "
             for (var l of links) {
