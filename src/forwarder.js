@@ -165,7 +165,11 @@ class Forwarder {
                 }
 
             }
+            this.DataForwarded++;
             delete this.pit[interestName];
+        }
+        else {
+            this.DataDropped++;
         }
         if (block && block.length > 0) {
             return new Block(block);
@@ -184,7 +188,11 @@ class Forwarder {
                     block.push(n);
                 }
             }
+            this.DataForwarded++;
             delete this.pit[interestName];
+        }
+        else {
+            this.DataDropped++;
         }
         if (block && block.length > 0) {
             return new Block(block);
@@ -268,6 +276,7 @@ class Router extends Forwarder {
 
     receiveData(link, data) {
         return function() {
+            this.DataReceived++;
             var links = this.pit[data.name.toUri()];
             var links_str = "{ "
             for (var l of links) {
