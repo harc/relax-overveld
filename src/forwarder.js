@@ -71,19 +71,22 @@ class Forwarder {
 
     broadcastInterest(src, interest) {
       var interestName = interest.name.toUri();
-      for (var link in this.links) {
-        if (this.links[link] != src) {
+      for (var link of this.links) {
+        if (link !== src) {
+          console.log(link);
           if (!this.pit[interestName]) {
-              this.pit[interestName] = [this.links[link]];
-              console.log("sending to: " + this.links[link]);
+              this.pit[interestName] = [link];
+              console.log("sending to: " + link);
               //this.links[link].sendInterest(this, interest);
           }
           else {
-              var element = this.pit[interestName];
-              console.log("Element: " + element);
-              var elementToPush = element.push(this.links[link]);
-              this.pit[interestName] = elementToPush;
-              console.log("Pit state: " + elementToPush);
+              var element = [];
+              element.push(this.pit[interestName]);
+              console.log("Element: " + element.toString());
+              //var elementToPush = element.push(link);
+              element.push(link);
+              this.pit[interestName] = element;
+              console.log("Pit state: " + element.toString());
               //this.links[link].sendInterest(this, interest);
           }
         }
