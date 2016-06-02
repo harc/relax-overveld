@@ -54,6 +54,11 @@ class Forwarder {
 
     sendInterest(src, interest) {
         var interestName = interest.name.toUri();
+        var lookupRes = this.csLookup(interest);
+        if (lookupRes !== false) {
+          this.pit[interestName] = [src];
+          return lookupRes;
+        }
         var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         if (longestPrefixMatchIndex !== -1) {
             var longestPrefix = this.fib[longestPrefixMatchIndex];
@@ -116,7 +121,9 @@ class Forwarder {
         this.pit[interestName].push(link);
         // in-network cache lookup
         this.InterestsForwarded++;
-        this.csLookup(interest);
+        if (this.csLookup(interest)) {
+          return;
+        }
         // TODO multipath forwarding
         var dst = this.dict[interestName][0];
         if (dst) {
@@ -124,18 +131,10 @@ class Forwarder {
         }
     }
 
-    csLookup(interest) {
-      var interestName = interest.name.toUri();
-      // do the look up
-      if (this.cache[interestName] !== undefined) {
-        // serve data from cache
-        this.sendData(interest.name, this.cache[interestName]);
-      }
-    };
-
     receiveData(link, data) {
         var links = this.pit[data.name.toUri()];
         // store data in cache
+        // console.log("Store data in cache: " + data.name.toUri());
         this.cache[data.name.toUri()] = data;
 
         if (links) {
@@ -199,6 +198,20 @@ class Forwarder {
         }
         return undefined;
     }
+
+    csLookup(interest) {
+      var interestName = interest.name.toUri();
+      // console.log("CS Lookup. Cache: " + this.cache);
+      // do the look up
+      if (this.cache[interestName] !== undefined) {
+        // serve data from cache
+        // console.log("Found data in cache: " + interestName);
+        return function() {
+          return this.sendData(interest.name, this.cache[interestName]);
+        }.bind(this);
+      }
+      return false;
+    };
 
     findLongestPrefixMatch(name) {
         var arrayOfNameComponents = name.toUri().split("/");
@@ -277,6 +290,8 @@ class Router extends Forwarder {
     receiveData(link, data) {
         return function() {
             this.DataReceived++;
+            console.log("Store data in cache: " + data.name.toUri());
+            this.cache[data.name.toUri()] = data;
             var links = this.pit[data.name.toUri()];
             var links_str = "{ "
             for (var l of links) {
