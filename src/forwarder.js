@@ -91,21 +91,20 @@ class Forwarder {
       var interestName = interest.name.toUri();
       for (var link of this.links) {
         if (link !== src) {
-          console.log(link);
+          // console.log(link);
           if (!this.pit[interestName]) {
               this.pit[interestName] = [link];
-              console.log("sending to: " + link);
-              //this.links[link].sendInterest(this, interest);
+              // console.log("sending to: " + link);
+              link.sendInterest(this, interest);
           }
           else {
               var element = [];
               element.push(this.pit[interestName]);
-              console.log("Element: " + element.toString());
-              //var elementToPush = element.push(link);
+              // console.log("Element: " + element.toString());
               element.push(link);
               this.pit[interestName] = element;
-              console.log("Pit state: " + element.toString());
-              //this.links[link].sendInterest(this, interest);
+              // console.log("Pit state: " + element.toString());
+              link.sendInterest(this, interest);
           }
         }
       }
