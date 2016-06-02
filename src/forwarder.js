@@ -9,6 +9,14 @@ class Forwarder {
         this.cache = [];
         // broadcast strategy
         this.broadcast = false;
+        // Interest counters
+        this.InterestsReceived = 0;
+        this.InterestsDropped = 0;
+        this.InterestsForwarded = 0;
+        // Data counters
+        this.DataReceived = 0;
+        this.DataDropped = 0;
+        this.DataForwarded = 0;
     };
 
     setBroadcastStrategy(attr) {
@@ -51,6 +59,7 @@ class Forwarder {
             var longestPrefix = this.fib[longestPrefixMatchIndex];
             // multipath forwarding
             if (this.broadcast) {
+              this.InterestsForwarded++;
               this.broadcastInterest(src, interest);
             }
             else {
@@ -59,6 +68,7 @@ class Forwarder {
                   // interest aggregation
                   if (!this.pit[interestName]) {
                       this.pit[interestName] = [src];
+                      this.InterestsForwarded++;
                       return dst.sendInterest(this, interest);
                   }
                   else {
@@ -66,6 +76,9 @@ class Forwarder {
                   }
                 }
             }
+        }
+        else {
+          this.InterestsDropped++;
         }
     }
 
@@ -95,12 +108,14 @@ class Forwarder {
 
     receiveInterest(link, interest) {
         var interestName = interest.name.toUri();
+        this.InterestsReceived++;
         interest.incrementHopCount();
         if (!this.pit[interestName]) {
             this.pit[interestName] = [];
         }
         this.pit[interestName].push(link);
         // in-network cache lookup
+        this.InterestsForwarded++;
         this.csLookup(interest);
         // TODO multipath forwarding
         var dst = this.dict[interestName][0];
@@ -237,6 +252,7 @@ class Router extends Forwarder {
 
     receiveInterest(link, interest) {
         return function() {
+            this.InterestsReceived++;
             if (this.shouldForward(interest)) {
                 // TODO multi-path forwarding
                 interest.incrementHopCount();
