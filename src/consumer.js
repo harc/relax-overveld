@@ -13,7 +13,7 @@ class Consumer extends Node {
 
   sendInterest(interest) {
     return function() {
-      console.log(this.name + " sent Interest: " + JSON.stringify(this.interest));
+      console.log(this.name + " sent Interest: " + JSON.stringify(interest));
       return (this.forwarder.sendInterest(interest)) ;
     }.bind(this);
   }

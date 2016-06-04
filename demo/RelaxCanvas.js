@@ -365,6 +365,13 @@ RelaxCanvas.prototype.step = function () {
   if (!this.queue.empty()) {
     var curr_block = this.queue.pop();
     var next = [];
+    // step each node
+    for (var node of this.nodes) {
+      var n = node.step();
+      if (n) {
+        next.push(n);
+      }
+    }
     for (var s of curr_block) {
       var n = s.call();
       if (n) {

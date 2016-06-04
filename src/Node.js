@@ -33,6 +33,10 @@ class Node {
         return this.onStart;
     };
 
+    step() {
+        return this.onStep;
+    }
+
     receiveInterest(interest) {
         return this.onInterestReceived.bind(this, interest);
     };
