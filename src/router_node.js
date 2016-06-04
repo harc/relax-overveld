@@ -7,10 +7,9 @@ class RouterNode extends Node {
         super(arguments[0]);
         this.color = 'black';
         this.forwarder =  new Router(this);
+        this.onStart = new Block(function () {});
     }
 
-    start() {
-    }
     
     drawAttributes(context) {
         context.fillText('Router: ' + this.name, this.x + this.offset, this.y - this.offset);

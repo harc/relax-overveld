@@ -160,30 +160,6 @@ class Forwarder {
     }
 
     sendData(interestName, data) {
-        var intrestName = interestName.toUri();
-        var links = this.pit[interestName];
-        if (links) {
-            var block = [];
-            for (var link of links) {
-                var  n = link.sendData(this, data)
-                if (n) {
-                    block.push(n);
-                }
-
-            }
-            this.DataForwarded++;
-            delete this.pit[interestName];
-        }
-        else {
-            this.DataDropped++;
-        }
-        if (block && block.length > 0) {
-            return new Block(block);
-        }
-        return undefined;
-    }
-
-    sendData(interestName, data) {
         var interestName = interestName.toUri();
         var links = this.pit[interestName];
         if (links) {
@@ -214,7 +190,7 @@ class Forwarder {
         // serve data from cache
         // console.log("Found data in cache: " + interestName);
         return function() {
-          return this.sendData(interest.name, this.cache[interestName]);
+          return this.receiveData(this, this.cache[interestName]);
         }.bind(this);
       }
       return false;

@@ -3,23 +3,17 @@ class Consumer extends Node {
     super(arguments[0]);
     this.interest = new Interest(name);
     this.forwarder = new LocalForwarder(this);
-    this.color = 'blue'
+    this.color = 'blue';
+    this.onStart = new Block(this.sendInterest(this.interest));
+    this.onData  = new Block(function(data) {
+                    console.log(this.name + " received Data: " + JSON.stringify(data));
+                  }.bind(this));
   }
 
-  start() {
-    return this.sendInterest();
-  }
-
-  sendInterest() {
+  sendInterest(interest) {
     return function() {
       console.log(this.name + " sent Interest: " + JSON.stringify(this.interest));
-      return (this.forwarder.sendInterest(this.interest)) ;
-    }.bind(this);
-  }
-
-  receiveData(data) {
-    return function() {
-      console.log(this.name + " received Data: " + JSON.stringify(data));
+      return (this.forwarder.sendInterest(interest)) ;
     }.bind(this);
   }
 
