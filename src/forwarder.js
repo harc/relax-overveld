@@ -18,6 +18,7 @@ class Forwarder {
         this.DataReceived = 0;
         this.DataDropped = 0;
         this.DataForwarded = 0;
+        this.cachingEnabled = true;
     };
 
     setBroadcastStrategy(attr) {
@@ -63,7 +64,7 @@ class Forwarder {
 
     sendInterest(src, interest) {
         var interestName = interest.name.toUri();
-        var lookupRes = this.csLookup(interest);
+        var lookupRes = this.cachingEnabled ? this.csLookup(interest) : false;
         if (lookupRes !== false) {
           this.pit[interestName] = [src];
           return lookupRes;
@@ -129,7 +130,7 @@ class Forwarder {
         this.pit[interestName].push(link);
         // in-network cache lookup
         this.InterestsForwarded++;
-        if (this.csLookup(interest)) {
+        if (this.cachingEnabled && this.csLookup(interest)) {
           return;
         }
         // TODO multipath forwarding
@@ -140,10 +141,12 @@ class Forwarder {
     }
 
     receiveData(link, data) {
-        var links = this.pit[data.name.toUri()];
+        var dataName = data.name.toUri();
+        var links = this.pit[dataName];
         // store data in cache
-        this.cache[data.name.toUri()] = data;
-
+        if (this.cachingEnabled) {
+            this.cache[data.name.toUri()] = data;
+        }
         if (links) {
             var block = [];
             for (var link of links) {
@@ -152,6 +155,7 @@ class Forwarder {
                     block.push(n);
                 }
             }
+            delete this.pit[dataName];
         }
         if (block && block.length > 0) {
             return new Block(block);
@@ -273,8 +277,10 @@ class Router extends Forwarder {
     receiveData(link, data) {
         return function() {
             this.DataReceived++;
-            console.log("Store data in cache: " + data.name.toUri());
-            this.cache[data.name.toUri()] = data;
+            if (this.cachingEnabled) {
+                console.log("Store data in cache: " + data.name.toUri());
+                this.cache[data.name.toUri()] = data;
+            }
             var links = this.pit[data.name.toUri()];
             var links_str = "{ "
             for (var l of links) {

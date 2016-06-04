@@ -3,6 +3,7 @@ class Consumer extends Node {
     super(arguments[0]);
     this.interest = new Interest(name);
     this.forwarder = new LocalForwarder(this);
+    this.forwarder.cachingEnabled = false;
     this.color = 'blue';
     this.onStart = new Block(this.sendInterest(this.interest));
     this.onData  = new Block(function(data) {
