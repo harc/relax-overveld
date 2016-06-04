@@ -7,6 +7,7 @@ class Forwarder {
         this.pit = [];
         // in-network cache
         this.cache = [];
+        this.forwardedAnnouncements = [];
         // broadcast strategy
         this.broadcast = false;
         // Interest counters
@@ -17,6 +18,7 @@ class Forwarder {
         this.DataReceived = 0;
         this.DataDropped = 0;
         this.DataForwarded = 0;
+        this.cachingEnabled = true;
     };
 
     setBroadcastStrategy(attr) {
@@ -31,30 +33,38 @@ class Forwarder {
         this.links.push(link);
     }
 
-    announcePrefix(src, prefix) {
-        for (var link of this.links) {
-            // do not forward to any link we learned this from
-            if (!this.dict[prefix.toUri()].includes(link))
-            {
-                link.registerPrefix(this, prefix);
-            }
+    announcePrefix(announement) {
+        if (this.forwardedAnnouncements.includes(announement)) {
+            return;
         }
+        this.forwardedAnnouncements.push(announement);
+        var prefix = announement.prefix;
+        /* announce prefix to remaining neighbors */
+        return (this.links.filter(function (link) {
+            return !this.dict[prefix.toUri()].includes(link);
+        }.bind(this))
+            .map(function (link) {
+                link.registerPrefix(this, announement);
+            }.bind(this)));
     }
 
-    registerPrefix(link, prefix) {
-        if (!this.dict[prefix.toUri()]) {
-            this.dict[prefix.toUri()] = [link];
+
+    registerPrefix(link, announement) {
+        var prefix = announement.prefix;
+        if (!this.fib.includes(prefix)) {
             this.fib.push(prefix);
-        }
-        else if (!this.dict[prefix.toUri()].includes(link)) {
-            this.dict[prefix.toUri()].push(link);
-            this.fib.push(prefix);
+            if (!this.dict[prefix.toUri()]) {
+                this.dict[prefix.toUri()] = [link];
+            }
+            else {
+                this.dict[prefix.toUri()].push(link);
+            }
         }
     }
 
     sendInterest(src, interest) {
         var interestName = interest.name.toUri();
-        var lookupRes = this.csLookup(interest);
+        var lookupRes = this.cachingEnabled ? this.csLookup(interest) : false;
         if (lookupRes !== false) {
           this.pit[interestName] = [src];
           return lookupRes;
@@ -120,7 +130,7 @@ class Forwarder {
         this.pit[interestName].push(link);
         // in-network cache lookup
         this.InterestsForwarded++;
-        if (this.csLookup(interest)) {
+        if (this.cachingEnabled && this.csLookup(interest)) {
           return;
         }
         // TODO multipath forwarding
@@ -131,11 +141,12 @@ class Forwarder {
     }
 
     receiveData(link, data) {
-        var links = this.pit[data.name.toUri()];
+        var dataName = data.name.toUri();
+        var links = this.pit[dataName];
         // store data in cache
-        // console.log("Store data in cache: " + data.name.toUri());
-        this.cache[data.name.toUri()] = data;
-
+        if (this.cachingEnabled) {
+            this.cache[data.name.toUri()] = data;
+        }
         if (links) {
             var block = [];
             for (var link of links) {
@@ -144,30 +155,7 @@ class Forwarder {
                     block.push(n);
                 }
             }
-        }
-        if (block && block.length > 0) {
-            return new Block(block);
-        }
-        return undefined;
-    }
-
-    sendData(interestName, data) {
-        var intrestName = interestName.toUri();
-        var links = this.pit[interestName];
-        if (links) {
-            var block = [];
-            for (var link of links) {
-                var  n = link.sendData(this, data)
-                if (n) {
-                    block.push(n);
-                }
-
-            }
-            this.DataForwarded++;
-            delete this.pit[interestName];
-        }
-        else {
-            this.DataDropped++;
+            delete this.pit[dataName];
         }
         if (block && block.length > 0) {
             return new Block(block);
@@ -206,7 +194,7 @@ class Forwarder {
         // serve data from cache
         // console.log("Found data in cache: " + interestName);
         return function() {
-          return this.sendData(interest.name, this.cache[interestName]);
+          return this.receiveData(this, this.cache[interestName]);
         }.bind(this);
       }
       return false;
@@ -249,9 +237,9 @@ class LocalForwarder extends Forwarder {
         this.node = node;
     };
 
-    announcePrefix(prefix) {
-        super.registerPrefix(this.node, prefix);
-        return super.announcePrefix(this.node, prefix);
+    announcePrefix(announement) {
+        super.registerPrefix(this.node, announement);
+        return super.announcePrefix(announement);
     };
 
     sendInterest(interest) {
@@ -265,9 +253,9 @@ class Router extends Forwarder {
         this.node = node;
     }
 
-    registerPrefix(src, prefix) {
-        super.registerPrefix(src, prefix);
-        return super.announcePrefix(src, prefix);
+    registerPrefix(src, announement) {
+        super.registerPrefix(src, announement);
+        return super.announcePrefix(announement);
     }
 
     receiveInterest(link, interest) {
@@ -289,8 +277,10 @@ class Router extends Forwarder {
     receiveData(link, data) {
         return function() {
             this.DataReceived++;
-            console.log("Store data in cache: " + data.name.toUri());
-            this.cache[data.name.toUri()] = data;
+            if (this.cachingEnabled) {
+                console.log("Store data in cache: " + data.name.toUri());
+                this.cache[data.name.toUri()] = data;
+            }
             var links = this.pit[data.name.toUri()];
             var links_str = "{ "
             for (var l of links) {

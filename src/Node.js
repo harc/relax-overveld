@@ -28,6 +28,22 @@ class Node {
             this.parameter,
         ].join(' ');
     }
+
+    start() {
+        return this.onStart;
+    };
+
+    step() {
+        return this.onStep;
+    }
+
+    receiveInterest(interest) {
+        return this.onInterestReceived.bind(this, interest);
+    };
+
+    receiveData(data) {
+        return this.onData.bind(this, data);
+    };
     
     draw (context) {
         context.fillStyle = this.color;
