@@ -91,17 +91,9 @@ RelaxCanvas.prototype.keydown = function(k) {
     case 'D': this.enterDeleteMode(); break;
     case 'T': this.enterTypeMode(); break;
     case 'A': this.enterAttributesMode(); break;
-    case 'S':
-    {
-      if (this.simulationStarted) {
-        this.step();
-      }
-      else {
-        this.simulationStarted = true;
-        this.startSimulation();
-      }
-    }
-      break;
+    case 'S': {
+      this.step();
+    } break;
     default:
       if (this.applyFns[k] && this.applyFn !== this.applyFns[k]) {
         this.clearSelection();
@@ -544,7 +536,6 @@ RelaxCanvas.prototype.removeConstraint = function(unwanted) {
 
 RelaxCanvas.prototype.clear = function() {
   this.relax.clear();
-  this.simulationStarted = false;
   this.nodes = [];
   this.edges = [];
   this.constraints = [];

@@ -30,10 +30,14 @@ class Node {
     }
 
     start() {
-        return this.onStart || this.onStep;
     };
 
     step() {
+        var onStart = this.onStart;
+        if (onStart) {
+            this.onStart = undefined;
+            return onStart;
+        }
         return this.onStep;
     }
 
