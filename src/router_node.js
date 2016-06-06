@@ -6,13 +6,14 @@ class RouterNode extends Node {
     constructor() {
         super(arguments[0]);
         this.color = 'black';
-        this.forwarder =  new Router(this);
+        this.forwarder = new Router(this);
         this.onStart = new Block(function () {});
     }
 
     
     drawAttributes(context) {
-        context.fillText('Router: ' + this.name, this.x + this.offset, this.y - this.offset);
+        context.fillText('Router: ' + this.name, this.x + this.offset, this.y - 2*this.offset);
+        context.fillText('Cache: ' + Object.keys(this.forwarder.cache), this.x + this.offset, this.y - this.offset);
     }
     
     fields() {

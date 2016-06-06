@@ -25,7 +25,6 @@ class Node {
             this.name,
             Math.floor(this.x),
             Math.floor(this.y),
-            this.parameter,
         ].join(' ');
     }
 

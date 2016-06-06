@@ -6,7 +6,7 @@ class Forwarder {
         this.dict = [];
         this.pit = [];
         // in-network cache
-        this.cache = [];
+        this.cache = {};
         this.forwardedAnnouncements = [];
         // broadcast strategy
         this.broadcast = false;
