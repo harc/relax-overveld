@@ -71,7 +71,6 @@ class Forwarder {
         }
         var longestPrefixMatchIndex = this.findLongestPrefixMatch(interest.name);
         if (longestPrefixMatchIndex !== -1) {
-            var longestPrefix = this.fib[longestPrefixMatchIndex];
             // multipath forwarding
             if (this.broadcast) {
               this.InterestsForwarded++;
