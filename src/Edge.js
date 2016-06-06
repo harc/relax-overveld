@@ -9,6 +9,8 @@ class Edge {
         this.numPackets = 0;
         this.name = 'Edge' + getEdgeID();
         this.capacity = optCapacity || 1;
+        this.dst = null;
+        this.angleOffset = 0;
     }
 
     reset() {
@@ -34,6 +36,18 @@ class Edge {
         context.lineTo(this.p2.x, this.p2.y);
         context.closePath();
         context.stroke();
+
+        if (this.numPackets !== 0) {
+            var angle = Math.atan2(this.p2.y - this.p1.y, this.p2.x - this.p1.x);
+            Triangle.draw({
+                context: context,
+                width: 30,
+                x: this.dst.x,
+                y: this.dst.y,
+                angle: angle + this.angleOffset,
+                color: 'lime',
+            });
+        }
     }
     
     serialize() {
@@ -47,7 +61,10 @@ class Edge {
     };
 
     sendInterest(src, interest) {
-        var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
+        this.dst = (src == this.p1.forwarder) ? this.p2 : this.p1;
+        var dst = this.dst.forwarder;
+        this.angleOffset = Math.PI;
+        
         this.numPackets++;
         if (this.numPackets <= this.capacity) {
             return dst.receiveInterest(this, interest);
@@ -55,7 +72,10 @@ class Edge {
     };
 
     sendData(src, data) {
-        var dst = (src == this.p1.forwarder) ? this.p2.forwarder : this.p1.forwarder;
+        this.dst = (src == this.p1.forwarder) ? this.p2 : this.p1;
+        var dst = this.dst.forwarder;
+        this.angleOffset = 0;
+        
         this.numPackets++;
         if (this.numPackets <= this.capacity) {
             return dst.receiveData(this, data);
