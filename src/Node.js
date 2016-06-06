@@ -30,7 +30,7 @@ class Node {
     }
 
     start() {
-        return this.onStart;
+        return this.onStart || this.onStep;
     };
 
     step() {

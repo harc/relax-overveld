@@ -342,9 +342,7 @@ RelaxCanvas.prototype.stepAnimation = function () {
 RelaxCanvas.prototype.startSimulation = function () {
   var block = [];
   // get the starting block for each node of the simulation
-  var routers = this.nodes.filter(function(n)   { return n.type == NODE_TYPE.ROUTER; });
-  var producers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.PRODUCER });
-  var consumers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.CONSUMER; });
+
 
   var startFn =  function(n) {
     var s = n.start();
@@ -353,7 +351,7 @@ RelaxCanvas.prototype.startSimulation = function () {
     }
   };
   //  start first the routers, then the producers, and last the consumers
-  routers.map(startFn); producers.map(startFn); consumers.map(startFn)
+  Routers.map(startFn); Producers.map(startFn); Consumers.map(startFn)
   this.queue.push(block);
 };
 
@@ -362,27 +360,27 @@ RelaxCanvas.prototype.step = function () {
   for (var e of this.edges) {
     e.reset();
   }
+  // step each node
+  var next = [];
+  for (var node of this.nodes) {
+    var n = node.step();
+    if (n) {
+      next.push(n);
+    }
+  }
   if (!this.queue.empty()) {
     var curr_block = this.queue.pop();
-    var next = [];
-    // step each node
-    for (var node of this.nodes) {
-      var n = node.step();
-      if (n) {
-        next.push(n);
-      }
-    }
     for (var s of curr_block) {
       var n = s.call();
       if (n) {
         next.push(n);
       }
     }
-    if (next && next.length > 0) {
-      this.queue.push(next);
-    }
   }
-  else {
+  if (next && next.length > 0) {
+    this.queue.push(next);
+  }
+  else if (this.queue.empty()) {
     console.log("fin");
   }
 };
@@ -472,12 +470,19 @@ RelaxCanvas.prototype.redraw = function() {
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
+
   var args = {x: x, y: y, optColor: optColor, name: optName || "/a" };
   var n = type == NODE_TYPE.PRODUCER ? new Producer(args)
         : type == NODE_TYPE.CONSUMER ? new Consumer(args)
         : /* default */                new RouterNode(args);
   this.nodes.push(n);
   this.relax.add(n);
+
+  // Update these globals
+  Routers = this.nodes.filter(function(n)   { return n.type == NODE_TYPE.ROUTER; });
+  Producers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.PRODUCER });
+  Consumers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.CONSUMER; });
+
   return n;
 };
 

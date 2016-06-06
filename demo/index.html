@@ -19,6 +19,7 @@
     <script src="../src/Queue.js"></script>
     <script src="../src/prefix_announcement.js"></script>
     <script src="RelaxCanvas.js"></script>
+    <script src="helpers.js"></script>
     <script src="Turtle.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
     <demos id="demos"></demos>
@@ -40,9 +41,13 @@
             return (results && results.length > 1) ? results[1] : "";
         };
 
+var helpers = document.getElementById('helpers');
 var demos = document.getElementById('demos');
-
 var selectedNode = undefined;
+
+var Producers = undefined;
+var Consumers = undefined;
+var Routers   = undefined;
 
 var examples = {};
 
