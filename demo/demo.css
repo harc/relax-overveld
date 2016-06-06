@@ -27,7 +27,7 @@ actions {
 demo, action, iterationsPerFrame, showEachIterationButton {
   display: block;
   margin: 10pt;
-  padding: 10pt 4pt;
+  padding: 0pt 4pt;
   background: #eee;
   border: 1px solid #ddd;
   border-radius: 4pt;

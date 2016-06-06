@@ -77,7 +77,7 @@ function installGeometricConstraints(Relax) {
     return {p: minus(this.c, this.p)};
   };
 
-  // Coincidence Constraint, i.e., I want these two points to be at the same place.
+  // Coincidence Constraint, i.e., I want these two nodes to be at the same place.
 
   Relax.geom.CoincidenceConstraint = function(p1, p2) {
     this.p1 = p1;

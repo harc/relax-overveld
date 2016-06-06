@@ -6,36 +6,61 @@
   </head>
   <body>
     <script src="../3rdparty/pointerevents.js"></script>
+    <script src="../src/block.js"></script>
     <script src="../dist/relax.js"></script>
+    <script src="../src/Triangle.js"></script>
+    <script src="../src/Field.js"></script>
+    <script src="../src/Marquee.js"></script>
+    <script src="../src/Edge.js"></script>
+    <script src="../src/Serialization.js"></script>
+    <script src="../src/AttributesBox.js"></script>
+    <script src="../src/Node.js"></script>
+    <script src="../src/forwarder.js"></script>
+    <script src="../src/Queue.js"></script>
+    <script src="../src/prefix_announcement.js"></script>
     <script src="RelaxCanvas.js"></script>
+    <script src="helpers.js"></script>
     <script src="Turtle.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
     <demos id="demos"></demos>
     <actions id="actions">
       <action key='P'>P: point</action>
+      <action key='S'>S: step</action>
       <action key='D'>D: delete</action>
-      <action key='F'>F: coordinate/1</action>
-      <action key='C'>C: coincidence/2</action>
       <action key='Q'>Q: equivalence/4</action>
       <action key='E'>E: eqdist/4</action>
       <action key='L'>L: length/2</action>
-      <action key='O'>O: orientation/4</action>
-      <action key='R'>R: parallel/4</action>
-      <action key='N'>N: perpendicular/4</action>
-      <action key='M'>M: motor/2</action>
+      <action key='R'>R: Run</action>
     </actions>
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
     <showEachIterationButton id="sii"></showEachIterationButton>
     <script>
 
+        Object.prototype.getClass = function () {
+            var funcNameRegex = /function (.{1,})\(/;
+            var results = (funcNameRegex).exec((this).constructor.toString());
+            return (results && results.length > 1) ? results[1] : "";
+        };
+
+var helpers = document.getElementById('helpers');
 var demos = document.getElementById('demos');
+var selectedNode = undefined;
+
+var Producers = undefined;
+var Consumers = undefined;
+var Routers   = undefined;
 
 var examples = {};
 
+String.prototype.replaceAt=function(index, character) {
+    return this.substr(0, index) + character + this.substr(index+character.length);
+};
+
 function showDemo(name) {
-  rc.clear();
   examples[name]();
 }
+var block = document.getElementsByTagName('block');
+var queue = document.getElementsByTagName('Queue');
 
 var actions = document.getElementsByTagName('action');
 for (var idx = 0; idx < actions.length; idx++) {
@@ -71,20 +96,46 @@ onload = function() {
     </script>
 
     <script src="example-clear.js"></script>
-    <script src="example-rod.js"></script>
-    <script src="example-chain.js"></script>
-    <script src="example-lazy-tongs.js"></script>
-
+    <script src="example-3-sausage-topology.js"></script>
+    <script src="example-9-sausage-topology.js"></script>
     <script>
 
 Object.keys(examples).forEach(function(e) {
   var demo = document.createElement('demo');
-  demo.appendChild(document.createTextNode(e));
+  demo.appendChild(document.createTextNode(e.replace("_", " ")));
   demo.onclick = function() {
     showDemo(e);
   };
   demos.appendChild(demo);
 });
+
+var forwarder = document.getElementById('forwarder');
+
+</script>
+<script src="../src/name.js"></script>
+<script>
+
+var nodeImpl = document.getElementById('nodeImpl');
+var name = document.getElementById('name');
+
+</script>
+<script src="../src/interest.js"></script>
+<script src="../src/data.js"></script>
+<script>
+
+var interest = document.getElementById('interest');
+var data = document.getElementById('data');
+var link = document.getElementById('link');
+
+</script>
+<script src="../src/producer.js"></script>
+<script src="../src/consumer.js"></script>
+<script src="../src/router_node.js"></script>
+<script>
+
+var consumer = document.getElementById('consumer');
+var producer = document.getElementById('producer');
+var router   = document.getElementById('router_node');
 
 var canvas = document.getElementById('canvas');
 canvas.width = window.innerWidth;
@@ -113,4 +164,3 @@ updateSIILabel();
     </script>
   </body>
 </html>
-

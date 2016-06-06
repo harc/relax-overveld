@@ -1,13 +1,12 @@
-function Line(p1, p2) {
-  this.p1 = p1;
-  this.p2 = p2;
+var NODE_ID = 0;
+var getNodeID = () => NODE_ID++;
+var EDGE_ID = 0;
+var getEdgeID = () => EDGE_ID++;
+var getNounce = function() {
+  return Math.random() * 982451653;
 }
 
-Line.prototype.involvesPoint = function(p) {
-  return p === this.p1 || p === this.p2;
-};
 
-// -----------------------------------------------------
 
 function RelaxCanvas(relax, canvas) {
   this.relax = relax;
@@ -16,26 +15,26 @@ function RelaxCanvas(relax, canvas) {
   this.showEachIteration = false;
   this.iterationsPerFrame = 0;
   this.paused = false;
-  this.points = [];
-  this.lines = [];
+  this.nodes = [];
+  this.edges = [];
   this.constraints = [];
 
   this.constraintConstructors = {
     "Relax.geom.CoordinateConstraint": Relax.geom.CoordinateConstraint,
-    "Relax.geom.CoincidenceConstraint": Relax.geom.CoincidenceConstraint,
     "Relax.geom.EquivalenceConstraint": Relax.geom.EquivalenceConstraint,
-    "Relax.geom.EqualDistanceConstraint": Relax.geom.EqualDistanceConstraint,
     "Relax.geom.LengthConstraint": Relax.geom.LengthConstraint,
-    "Relax.geom.OrientationConstraint": Relax.geom.OrientationConstraint,
-    "Relax.geom.MotorConstraint": Relax.geom.MotorConstraint
   };
 
   this.fingers = {};
 
-  this.pointMode = false;
-  this.lastPoint = undefined;
-
+  this.marquee = null;
+  this.drawingMarquee = false;
+  this.pasteMode = false;
+  this.copyMode = false;
   this.deleteMode = false;
+  this.nodeMode = false;
+  this.attributesMode = false;
+  this.lastPoint = undefined;
 
   this.initPointRadius();
   this.initCanvas(canvas);
@@ -43,21 +42,15 @@ function RelaxCanvas(relax, canvas) {
   var self = this;
   this.applyFns = {
     F: function(p)              { self.addCoordinateConstraint(p, p.x, p.y); },
-    C: function(p1, p2)         { self.addCoincidenceConstraint(p1, p2); },
     Q: function(p1, p2, p3, p4) { self.addEquivalenceConstraint(p1, p2, p3, p4); },
-    E: function(p1, p2, p3, p4) { self.addEqualDistanceConstraint(p1, p2, p3, p4); },
     L: function(p1, p2)         { var l = Relax.geom.magnitude(Relax.geom.minus(p2, p1));
-				  self.addLengthConstraint(p1, p2, l); },
-    O: function(p1, p2, p3, p4) { self.addOrientationConstraint(p1, p2, p3, p4); },
-    R: function(p1, p2, p3, p4) { self.addParallelConstraint(p1, p2, p3, p4); },
-    N: function(p1, p2, p3, p4) { self.addPerpendicularConstraint(p1, p2, p3, p4); },
-    M: function(p1, p2)         { self.addMotorConstraint(p1, p2, 1); }
+      self.addLengthConstraint(p1, p2, l); },
   };
   this.applyFn = undefined;
   this.selection = [];
-
-  this.stepFn = this.step.bind(this);
-  this.step();
+  this.queue = new Queue();
+  this.stepFn = this.stepAnimation.bind(this);
+  this.stepAnimation();
 }
 
 RelaxCanvas.prototype.initPointRadius = function() {
@@ -92,9 +85,16 @@ RelaxCanvas.prototype.initCanvas = function(canvas) {
 
 RelaxCanvas.prototype.keydown = function(k) {
   switch (k) {
-    case 'P': this.enterPointMode();  break;
+    case 'V': this.enterPasteMode(); break;
+    case 'C': this.enterCopyMode(); break;
+    case 'P': this.enterPointMode(); break;
     case 'D': this.enterDeleteMode(); break;
-    case 'S': this.showConstraints = !this.showConstraints; break;
+    case 'T': this.enterTypeMode(); break;
+    case 'A': this.enterAttributesMode(); break;
+    case 'R': setInterval( function(){ this.step() }.bind(this), 1000); break;
+    case 'S': {
+      this.step();
+    } break;
     default:
       if (this.applyFns[k] && this.applyFn !== this.applyFns[k]) {
         this.clearSelection();
@@ -105,14 +105,50 @@ RelaxCanvas.prototype.keydown = function(k) {
 
 RelaxCanvas.prototype.keyup = function(k) {
   switch (k) {
-    case 'P': this.exitPointMode();  break;
+    case 'V': this.exitPasteMode(); break;
+    case 'C': this.exitCopyMode(); break;
+    case 'A': this.exitAttributesMode(); break;
+    case 'P': this.exitPointMode(); break;
     case 'D': this.exitDeleteMode(); break;
+    case 'T': this.exitTypeMode(); break;
     default:
       if (this.applyFn === this.applyFns[k]) {
         this.clearSelection();
         this.applyFn = undefined;
       }
   }
+};
+
+RelaxCanvas.prototype.enterPasteMode = function () {
+  this.pasteMode = true;
+};
+
+RelaxCanvas.prototype.exitPasteMode = function () {
+  this.pasteMode = false;
+};
+
+RelaxCanvas.prototype.enterCopyMode = function () {
+  this.copyMode = true;
+};
+
+RelaxCanvas.prototype.exitCopyMode = function () {
+  this.copyMode = false;
+};
+
+RelaxCanvas.prototype.enterAttributesMode = function() {
+  this.attributesMode = true;
+};
+
+RelaxCanvas.prototype.exitAttributesMode = function() {
+  this.attributesMode = false;
+};
+
+RelaxCanvas.prototype.enterTypeMode = function() {
+  this.typeMode = true;
+};
+
+RelaxCanvas.prototype.exitTypeMode = function() {
+  this.typeMode = false;
 };
 
 RelaxCanvas.prototype.enterPointMode = function() {
@@ -134,7 +170,7 @@ RelaxCanvas.prototype.exitDeleteMode = function() {
 
 RelaxCanvas.prototype.clearSelection = function() {
   this.selection = [];
-  this.points.forEach(function(p) {
+  this.nodes.forEach(function(p) {
     p.selectionIndices = [];
   });
 };
@@ -146,23 +182,74 @@ RelaxCanvas.prototype.pointContains = function(p, x, y) {
   return square(this.pointRadius) >= square(x - p.x) + square(y - p.y);
 };
 
+RelaxCanvas.prototype.startMarquee = function ({x, y}={}) {
+  this.marquee = new Marquee({
+        x: x,
+        y: y,
+        addNode: this.addNode.bind(this),
+        addEdge: this.addEdge.bind(this),
+      }
+  );
+};
+
 RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
   var pointIdx;
-  this.points.forEach(function(p, idx) {
+  selectedNode = undefined;
+  this.nodes.forEach(function(p, idx) {
     if (self.pointContains(p, e.clientX, e.clientY)) {
       point = p;
       pointIdx = idx;
     }
   });
+
+
+  if (this.copyMode) {
+    if (this.drawingMarquee) {
+      this.marquee.copy({nodes: this.nodes, edges: this.edges});
+      this.drawingMarquee = false;
+    } else {
+      this.startMarquee({x: e.clientX, y: e.clientY});
+      this.drawingMarquee = true;
+    }
+  }
+  else if (this.pasteMode) {
+    this.marquee.paste({x: e.clientX, y: e.clientY});
+  }
+  
   if (point) {
-    if (this.deleteMode) {
+    selectedNode = point;
+    if (this.typeMode) {
+
+      // Create a new node of the next type, delete the old point, redirect all the edges
+      var newType = point.type === NODE_TYPE.PRODUCER ? NODE_TYPE.CONSUMER
+                  : point.type === NODE_TYPE.CONSUMER ? NODE_TYPE.ROUTER
+                  : /* default */                       NODE_TYPE.PRODUCER;
+      var newPoint = this.addNode(point.x, point.y, newType);
+      newPoint.forwarder.node = newPoint;
+      newPoint.name = point.name;
+      var edges = this.edges.filter(function (l) {
+        return l.involvesNode(point);
+      });
+      for (var e of edges) {
+        newPoint.forwarder.addLink(e);
+        if (e.p1 === point) {
+          e.p1 = newPoint;
+        }
+        else {
+          e.p2 = newPoint;
+        }
+      }
+      this.removePoint(point);
+    } else if (this.attributesMode) {
+      point.attributesBox.toggle();
+    } else if (this.deleteMode) {
       this.removePoint(point);
     } else {
       var constraint = this.addCoordinateConstraint(point, e.clientX, e.clientY);
-      this.points.splice(pointIdx, 1);
-      this.points.push(point);
+      this.nodes.splice(pointIdx, 1);
+      this.nodes.push(point);
       this.fingers[e.pointerId] =
 	{ x: e.clientX, y: e.clientY, point: point, constraint: constraint };
       point.isSelected = true;
@@ -170,7 +257,7 @@ RelaxCanvas.prototype.pointerdown = function(e) {
         var oldLastPoint = this.lastPoint;
         this.lastPoint = point;
         if (oldLastPoint && oldLastPoint !== this.lastPoint) {
-          this.addLine(oldLastPoint, this.lastPoint);
+          this.addEdge(oldLastPoint, this.lastPoint);
         }
       }
       if (this.applyFn) {
@@ -184,9 +271,9 @@ RelaxCanvas.prototype.pointerdown = function(e) {
     }
   } else if (this.pointMode) {
     var oldLastPoint = this.lastPoint;
-    this.lastPoint = this.addPoint(e.clientX, e.clientY);
+    this.lastPoint = this.addNode(e.clientX, e.clientY);
     if (oldLastPoint) {
-      this.addLine(oldLastPoint, this.lastPoint);
+      this.addEdge(oldLastPoint, this.lastPoint);
     }
   }
 };
@@ -197,6 +284,8 @@ RelaxCanvas.prototype.pointermove = function(e) {
     finger.x = e.clientX;
     finger.y = e.clientY;
   }
+  
+  if (this.marquee) { this.marquee.update({x: e.clientX, y: e.clientY}); }
 };
 
 RelaxCanvas.prototype.pointerup = function(e) {
@@ -230,7 +319,7 @@ RelaxCanvas.prototype.updateCoordinateConstraints = function() {
   });
 };
 
-RelaxCanvas.prototype.step = function() {
+RelaxCanvas.prototype.stepAnimation = function () {
   this.updateCoordinateConstraints();
   if (!this.paused) {
     if (this.showEachIteration) {
@@ -241,29 +330,55 @@ RelaxCanvas.prototype.step = function() {
   }
   this.redraw();
   requestAnimationFrame(this.stepFn);
-}
-
-RelaxCanvas.prototype.pause = function() {
-  this.paused = true;
 };
 
-RelaxCanvas.prototype.resume = function() {
-  this.paused = false;
-  this.step();
+RelaxCanvas.prototype.startSimulation = function () {
+  var block = [];
+  // get the starting block for each node of the simulation
+
+
+  var startFn =  function(n) {
+    var s = n.start();
+    if (s) {
+      block.push(s);
+    }
+  };
+  //  start first the routers, then the producers, and last the consumers
+  Routers.map(startFn); Producers.map(startFn); Consumers.map(startFn)
+  this.queue.push(block);
+};
+
+RelaxCanvas.prototype.step = function () {
+  // reset all the packet counters
+  for (var e of this.edges) {
+    e.reset();
+  }
+  // step each node
+  var next = [];
+  for (var node of this.nodes) {
+    var n = node.step();
+    if (n) {
+      next.push(n);
+    }
+  }
+  if (!this.queue.empty()) {
+    var curr_block = this.queue.pop();
+    for (var s of curr_block) {
+      var n = s.call();
+      if (n) {
+        next.push(n);
+      }
+    }
+  }
+  if (next && next.length > 0) {
+    this.queue.push(next);
+  }
+  else if (this.queue.empty()) {
+    console.log("fin");
+  }
 };
 
 // -----------------------------------------------------
-
-RelaxCanvas.prototype.drawPoint = function(p) {
-  this.ctxt.fillStyle = p.isSelected ? 'yellow' : p.color;
-  this.ctxt.beginPath();
-  this.ctxt.arc(p.x, p.y, this.pointRadius, 0, 2 * Math.PI);
-  this.ctxt.closePath()
-  this.ctxt.fill();
-  if (p.selectionIndices.length > 0) {
-    this.drawSelectionIndices(p);
-  }
-};
 
 RelaxCanvas.prototype.drawSelectionIndices = function(p) {
   var text = p.selectionIndices.join(', ');
@@ -275,16 +390,6 @@ RelaxCanvas.prototype.drawSelectionIndices = function(p) {
   this.ctxt.stroke();
   this.ctxt.strokeStyle = 'yellow';
   this.ctxt.strokeText(text, p.x, p.y);
-  this.ctxt.stroke();
-};
-
-RelaxCanvas.prototype.drawLine = function(l) {
-  this.ctxt.beginPath();
-  this.ctxt.moveTo(l.p1.x, l.p1.y);
-  this.ctxt.lineWidth = 3;
-  this.ctxt.strokeStyle = 'gray';
-  this.ctxt.lineTo(l.p2.x, l.p2.y);
-  this.ctxt.closePath();
   this.ctxt.stroke();
 };
 
@@ -347,23 +452,38 @@ RelaxCanvas.prototype.redraw = function() {
   var self = this;
   this.ctxt.fillStyle = 'white';
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  this.lines.forEach(function(l) { self.drawLine(l); });
-  this.points.forEach(function(p) { self.drawPoint(p); });
+  this.edges.forEach(_ => _.draw(this.ctxt));
+  this.nodes.forEach(_ => _.draw(this.ctxt));
   this.relax.things.forEach(function(c) { if (c.draw) { c.draw(self.ctxt, self); } });
+
+  (new Serialization(this.ctxt)).draw({nodes: this.nodes, edges: this.edges});
+  if (this.drawingMarquee) { this.marquee.draw(this.ctxt); }
 };
 
 // -----------------------------------------------------
 
-RelaxCanvas.prototype.addPoint = function(x, y, optColor) {
-  var p = {x: x, y: y, color: optColor || 'slateBlue', selectionIndices: []};
-  this.points.push(p);
-  this.relax.add(p);
-  return p;
+RelaxCanvas.prototype.addNode = function(x, y, type, optColor, optName) {
+
+  var args = {x: x, y: y, optColor: optColor, name: optName || "/a" };
+  var n = type == NODE_TYPE.PRODUCER ? new Producer(args)
+        : type == NODE_TYPE.CONSUMER ? new Consumer(args)
+        : /* default */                new RouterNode(args);
+  this.nodes.push(n);
+  this.relax.add(n);
+
+  // Update these globals
+  Routers = this.nodes.filter(function(n)   { return n.type == NODE_TYPE.ROUTER; });
+  Producers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.PRODUCER });
+  Consumers = this.nodes.filter(function(n) { return n.type == NODE_TYPE.CONSUMER; });
+
+  return n;
 };
 
-RelaxCanvas.prototype.addLine = function(p1, p2) {
-  var l = new Line(p1, p2);
-  this.lines.push(l);
+RelaxCanvas.prototype.addEdge = function(p1, p2) {
+  var l = new Edge(p1, p2);
+  p1.forwarder.addLink(l);
+  p2.forwarder.addLink(l);
+  this.edges.push(l);
   return l;
 };
 
@@ -382,16 +502,8 @@ RelaxCanvas.prototype.addCoordinateConstraint = function(p, x, y) {
   return this.addConstraint('Relax.geom.CoordinateConstraint', p, x, y);
 };
 
-RelaxCanvas.prototype.addCoincidenceConstraint = function(p1, p2) {
-  return this.addConstraint('Relax.geom.CoincidenceConstraint', p1, p2);
-};
-
 RelaxCanvas.prototype.addEquivalenceConstraint = function(p1, p2, p3, p4) {
   return this.addConstraint('Relax.geom.EquivalenceConstraint', p1, p2, p3, p4);
-};
-
-RelaxCanvas.prototype.addEqualDistanceConstraint = function(p1, p2, p3, p4) {
-  return this.addConstraint('Relax.geom.EqualDistanceConstraint', p1, p2, p3, p4);
 };
 
 RelaxCanvas.prototype.addLengthConstraint = function(p1, p2, l) {
@@ -405,46 +517,17 @@ RelaxCanvas.prototype.calculateAngle = function(p1, p2, p3, p4) {
   var a34 = Math.atan2(v34.y, v34.x);
   return (a12 - a34 + 2 * Math.PI) % (2 * Math.PI);
 };
-
-RelaxCanvas.prototype.addOrientationConstraint = function(p1, p2, p3, p4) {
-  return this.addConstraint('Relax.geom.OrientationConstraint',
-			    p1, p2, p3, p4, this.calculateAngle(p1, p2, p3, p4));
-};
-
-RelaxCanvas.prototype.addParallelConstraint = function(p1, p2, p3, p4) {
-  var angle = this.calculateAngle(p1, p2, p3, p4);
-  if (Math.PI / 2 < angle && angle < 3 * Math.PI / 2) {
-    var temp = p3;
-    p3 = p4;
-    p4 = temp;
-  }
-  return this.addConstraint('Relax.geom.OrientationConstraint', p1, p2, p3, p4, 0);
-};
-
-RelaxCanvas.prototype.addPerpendicularConstraint = function(p1, p2, p3, p4) {
-  if (this.calculateAngle(p1, p2, p3, p4) > Math.PI) {
-    var temp = p3;
-    p3 = p4;
-    p4 = temp;
-  }
-  return this.addConstraint('Relax.geom.OrientationConstraint', p1, p2, p3, p4, Math.PI / 2);
-};
-
-RelaxCanvas.prototype.addMotorConstraint = function(p1, p2, w) {
-  return this.addConstraint('Relax.geom.MotorConstraint', p1, p2, w);
-};
-
 // -----------------------------------------------------
 
 RelaxCanvas.prototype.removePoint = function(unwanted) {
   this.relax.remove(unwanted);
-  this.points = this.points.filter(function(p) { return p !== unwanted; });
-  this.lines = this.lines.filter(function(l) { return !l.involvesPoint(unwanted); });
+  this.nodes = this.nodes.filter(function(p) { return p !== unwanted; });
+  this.edges = this.edges.filter(function(l) { return !l.involvesNode(unwanted); });
   this.constraints = this.relax.getConstraints();
 };
 
 RelaxCanvas.prototype.removeLine = function(unwanted) {
-  this.lines = this.lines.filter(function(l) { return l !== unwanted; });
+  this.edges = this.edges.filter(function(l) { return l !== unwanted; });
 };
 
 RelaxCanvas.prototype.removeConstraint = function(unwanted) {
@@ -454,11 +537,18 @@ RelaxCanvas.prototype.removeConstraint = function(unwanted) {
 
 RelaxCanvas.prototype.clear = function() {
   this.relax.clear();
-
-  this.points = [];
-  this.lines = [];
+  this.nodes = [];
+  this.edges = [];
   this.constraints = [];
 
-  this.fingers = {}; // because fingers can refer to points
+  this.fingers = {}; // because fingers can refer to nodes
 };
 
+class ES6Test {
+  test() {
+    console.log('ES6 is working');
+  }
+}
+
+var t = new ES6Test();
+t.test();
