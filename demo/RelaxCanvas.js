@@ -91,6 +91,7 @@ RelaxCanvas.prototype.keydown = function(k) {
     case 'D': this.enterDeleteMode(); break;
     case 'T': this.enterTypeMode(); break;
     case 'A': this.enterAttributesMode(); break;
+    case 'R': setInterval( function(){ this.step() }.bind(this), 1000); break;
     case 'S': {
       this.step();
     } break;
