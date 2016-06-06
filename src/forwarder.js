@@ -26,7 +26,7 @@ class Forwarder {
     };
 
     shouldForward(interest) {
-        return !this.pit[interest.name.toUri()]
+        return !((this.cachingEnabled && this.csLookup(interest)) || this.pit[interest.name.toUri()])
     };
 
     addLink(link) {
@@ -282,12 +282,14 @@ class Router extends Forwarder {
                 this.cache[data.name.toUri()] = data;
             }
             var links = this.pit[data.name.toUri()];
-            var links_str = "{ "
-            for (var l of links) {
-                links_str += ( l.name + ", ");
+            if (links) {
+                var links_str = "{ "
+                for (var l of links) {
+                    links_str += ( l.name + ", ");
+                }
+                links_str = links_str.replaceAt([links_str.length - 2], " }");
+                console.log(this.node.name + " forwarding Data: " + JSON.stringify(data) + " to " + links_str);
             }
-            links_str = links_str.replaceAt([links_str.length - 2], " }");
-            console.log(this.node.name + " forwarding Data: " + JSON.stringify(data) + " to "+ links_str);
             return this.sendData(data.name, data);
         }.bind(this);
     }

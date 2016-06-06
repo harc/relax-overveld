@@ -1,13 +1,7 @@
 class Interest {
-  constructor(name) {
-    this.name = new Name(name);
-    this.lifetime = 2;
-    this.hopCount = 0;
-  };
-
-  constructInterestWithLifetime(name, lifetime) {
-    this.name = new Name(name);
-    this.lifetime = lifetime;
+  constructor(name, lifetime) {
+    this.name = name instanceof Name ? name : new Name(name);
+    this.lifetime = lifetime || 2;
     this.hopCount = 0;
   };
 
