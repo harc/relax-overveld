@@ -283,7 +283,7 @@ RelaxCanvas.prototype.drawLine = function(l) {
   this.ctxt.beginPath();
   this.ctxt.moveTo(l.p1.x, l.p1.y);
   this.ctxt.lineWidth = 3;
-  this.ctxt.strokeStyle = 'gray';
+  this.ctxt.strokeStyle = 'rgba(0,0,0,0.15)';
   this.ctxt.lineTo(l.p2.x, l.p2.y);
   this.ctxt.closePath();
   this.ctxt.stroke();
