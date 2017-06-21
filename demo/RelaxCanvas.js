@@ -514,6 +514,9 @@ RelaxCanvas.prototype.clear = function() {
   this.lines = [];
   this.constraints = [];
 
+  this.offsetX = 0;
+  this.offsetY = 0;
+
   this.fingers = {}; // because fingers can refer to points
 };
 
