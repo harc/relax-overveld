@@ -71,7 +71,6 @@ RelaxCanvas.prototype.initPointRadius = function() {
 };
 
 RelaxCanvas.prototype.initCanvas = function(canvas) {
-
   this.canvas = canvas;
 
   var self = this;
@@ -90,6 +89,26 @@ RelaxCanvas.prototype.initCanvas = function(canvas) {
   this.ctxt.shadowOffsetY = 1;
   this.ctxt.shadowColor = '#999';
   this.ctxt.shadowBlur = 1;
+
+  // setup the canvas for device-independent pixels
+  var dpr = window.devicePixelRatio || 1;
+  var bsr = this.ctxt.webkitBackingStorePixelRatio ||
+            this.ctxt.mozBackingStorePixelRatio ||
+            this.ctxt.msBackingStorePixelRatio ||
+            this.ctxt.oBackingStorePixelRatio ||
+            this.ctxt.backingStorePixelRatio || 1;
+  var ratio = dpr / bsr;
+
+  if (dpr !== bsr) {
+    var oldW = this.canvas.width;
+    var oldH = this.canvas.height;
+
+    this.canvas.width = oldW * ratio;
+    this.canvas.height = oldH * ratio;
+    this.canvas.style.width = oldW + 'px';
+    this.canvas.style.height = oldH + 'px';
+    this.ctxt.scale(ratio, ratio);
+  }
 };
 
 RelaxCanvas.prototype.pan = function(diffX, diffY) {
@@ -377,6 +396,7 @@ Relax.geom.LengthConstraint.prototype.draw = function(canvas, rc) {
 
 RelaxCanvas.prototype.redraw = function() {
   var self = this;
+
   this.ctxt.fillStyle = 'white';
   this.ctxt.fillRect(0, 0, this.canvas.width, this.canvas.height);
   this.lines.forEach(function(l) { self.drawLine(l); });
