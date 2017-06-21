@@ -309,7 +309,7 @@ RelaxCanvas.prototype.resume = function() {
 RelaxCanvas.prototype.drawPoint = function(p) {
   this.ctxt.fillStyle = p.isSelected ? 'yellow' : p.color;
   this.ctxt.beginPath();
-  this.ctxt.arc(p.x + this.offsetX, p.y + this.offsetY, this.pointRadius, 0, 2 * Math.PI);
+  this.ctxt.arc(p.x + this.offsetX, p.y + this.offsetY, 8, 0, 2 * Math.PI);
   this.ctxt.closePath()
   this.ctxt.fill();
   if (p.selectionIndices.length > 0) {
@@ -345,7 +345,7 @@ Relax.geom.CoordinateConstraint.prototype.draw = function(canvas, rc) {
   if (this.p.isSelected) return; // don't draw over the selection highlight
   ctxt.fillStyle = 'black';
   ctxt.beginPath();
-  ctxt.arc(this.c.x + canvas.offsetX, this.c.y + canvas.offsetY, rc.pointRadius * 0.666, 0, 2 * Math.PI);
+  ctxt.arc(this.c.x + canvas.offsetX, this.c.y + canvas.offsetY, 8 * 0.666, 0, 2 * Math.PI);
   ctxt.closePath();
   ctxt.fill();
 };
