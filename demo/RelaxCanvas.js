@@ -213,8 +213,8 @@ RelaxCanvas.prototype.pointermove = function(e) {
   var finger = this.fingers[e.pointerId];
   if (finger) {
     if (!finger.point) { // panning
-      var diffX = finger.x - e.clientX;
-      var diffY = finger.y - e.clientY;
+      var diffX = e.clientX - finger.x;
+      var diffY = e.clientY - finger.y;
       if (diffX !== 0 || diffY != 0) {
         this.pan(diffX, diffY);
       }
