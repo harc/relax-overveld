@@ -64,10 +64,10 @@ function RelaxCanvas(relax, canvas) {
 }
 
 RelaxCanvas.prototype.initPointRadius = function() {
-  var tablet = navigator.userAgent.match(/iPad/i) !== null ||
-               navigator.userAgent.match(/iPhone/i) !== null ||
-               navigator.userAgent.match(/Android/i) !== null;
-  this.pointRadius = tablet ? 20 : 8;
+  this.isTablet = navigator.userAgent.match(/iPad/i) !== null ||
+                  navigator.userAgent.match(/iPhone/i) !== null ||
+                  navigator.userAgent.match(/Android/i) !== null;
+  this.pointRadius = this.isTablet ? 20 : 8;
 };
 
 RelaxCanvas.prototype.initCanvas = function(canvas) {

@@ -18,7 +18,9 @@ examples['lazy tongs'] = function() {
   rc.addLine(p2,  p10);
   rc.addLine(p10, p4);
 
-  rc.addCoordinateConstraint(p1, p1.x, p1.y);
+  if (!rc.isTablet) {
+    rc.addCoordinateConstraint(p1, p1.x, p1.y);
+  }
 
   rc.addLengthConstraint(p1,  p5, 100 * Math.sqrt(2));
   rc.addLengthConstraint(p2,  p6, 100 * Math.sqrt(2));
