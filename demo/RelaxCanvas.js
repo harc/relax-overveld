@@ -185,6 +185,9 @@ RelaxCanvas.prototype.pointerdown = function(e) {
   var self = this;
   var point;
   var pointIdx;
+
+  e.target.setPointerCapture(e.pointerId);
+
   this.points.forEach(function(p, idx) {
     if (self.pointContains(p, e.clientX, e.clientY)) {
       point = p;
