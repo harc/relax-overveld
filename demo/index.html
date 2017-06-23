@@ -80,7 +80,7 @@ demoFlap.addEventListener('pointerup', function(e) {
   }
 }, false);
 // addSwipe(demos, {right: function(e) {
-demos.addEventListener('click', function(e) {
+demos.addEventListener('pointerup', function(e) {
   if (!demos.classList.contains('collapsed') && e.target === demos) {
     demos.classList.add('collapsed');
   }
@@ -98,7 +98,7 @@ actionFlap.addEventListener('pointerup', function(e) {
   }
 }, false);
 // addSwipe(actionFlap.parentElement, {left: function(e) {
-actionFlap.parentElement.addEventListener('click', function(e) {
+actionFlap.parentElement.addEventListener('pointerup', function(e) {
   var actions = actionFlap.parentElement;
   if (!actions.classList.contains('collapsed') && e.target === actions) {
     actions.classList.add('collapsed');
