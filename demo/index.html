@@ -6,7 +6,7 @@
   </head>
   <body>
     <script src="3rdparty/pep.js"></script>
-    <script src="swipe.js"></script>
+    <!-- <script src="swipe.js"></script> -->
     <script src="../dist/relax.js"></script>
     <script src="RelaxCanvas.js"></script>
     <script src="Turtle.js"></script>
@@ -79,11 +79,13 @@ demoFlap.addEventListener('pointerup', function(e) {
     return true;
   }
 }, false);
-addSwipe(demos, {right: function(e) {
+// addSwipe(demos, {right: function(e) {
+demos.addEventListener('click', function(e) {
   if (!demos.classList.contains('collapsed') && e.target === demos) {
     demos.classList.add('collapsed');
   }
-}});
+});
+// }});
 
 var actionFlap = document.querySelector('actions flap');
 actionFlap.addEventListener('pointerup', function(e) {
@@ -95,12 +97,14 @@ actionFlap.addEventListener('pointerup', function(e) {
     return true;
   }
 }, false);
-addSwipe(actionFlap.parentElement, {left: function(e) {
+// addSwipe(actionFlap.parentElement, {left: function(e) {
+actionFlap.parentElement.addEventListener('click', function(e) {
   var actions = actionFlap.parentElement;
   if (!actions.classList.contains('collapsed') && e.target === actions) {
     actions.classList.add('collapsed');
   }
-}});
+});
+// }});
     </script>
 
     <script src="example-clear.js"></script>
