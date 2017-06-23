@@ -1,5 +1,7 @@
+<!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
     <meta name="viewport" content="user-scalable=no"></meta>
     <title>DON'T PANIC</title>
     <link href="demo.css" rel="stylesheet"></link>
@@ -11,9 +13,13 @@
     <script src="RelaxCanvas.js"></script>
     <script src="Turtle.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
-    <demos id="demos"><flap>DEMOS</flap></demos>
+    <demos id="demos">
+      <flap>DEMOS</flap>
+      <demo style="text-align: center">⇨</demo>
+    </demos>
     <actions id="actions">
       <flap>ACTIONS</flap>
+      <action style="text-align: center">⇦</action>
       <action key='P'>P: point</action>
       <action key='D'>D: delete</action>
       <action key='F'>F: coordinate/1</action>
@@ -40,7 +46,7 @@ function showDemo(name) {
 }
 
 var actions = document.getElementsByTagName('action');
-for (var idx = 0; idx < actions.length; idx++) {
+for (var idx = 1; idx < actions.length; idx++) {
   var action = actions[idx];
   action.setAttribute('touch-action', 'none');
   action.addEventListener(
@@ -71,7 +77,7 @@ onload = function() {
 };
 
 var demoFlap = document.querySelector('demos flap');
-demoFlap.addEventListener('pointerup', function(e) {
+demoFlap.addEventListener('click', function(e) {
   if (demos.classList.contains('collapsed')) {
     demos.classList.remove('collapsed');
     e.preventDefault();
@@ -79,16 +85,14 @@ demoFlap.addEventListener('pointerup', function(e) {
     return true;
   }
 }, false);
-// addSwipe(demos, {right: function(e) {
-demos.addEventListener('pointerup', function(e) {
-  if (!demos.classList.contains('collapsed') && e.target === demos) {
+document.querySelector('demo').addEventListener('click', function(e) {
+  if (!demos.classList.contains('collapsed')) {
     demos.classList.add('collapsed');
   }
 });
-// }});
 
 var actionFlap = document.querySelector('actions flap');
-actionFlap.addEventListener('pointerup', function(e) {
+actionFlap.addEventListener('click', function(e) {
   var actions = actionFlap.parentElement;
   if (actions.classList.contains('collapsed')) {
     actions.classList.remove('collapsed');
@@ -97,14 +101,12 @@ actionFlap.addEventListener('pointerup', function(e) {
     return true;
   }
 }, false);
-// addSwipe(actionFlap.parentElement, {left: function(e) {
-actionFlap.parentElement.addEventListener('pointerup', function(e) {
+document.querySelector('action').addEventListener('click', function(e) {
   var actions = actionFlap.parentElement;
-  if (!actions.classList.contains('collapsed') && e.target === actions) {
+  if (!actions.classList.contains('collapsed')) {
     actions.classList.add('collapsed');
   }
 });
-// }});
     </script>
 
     <script src="example-clear.js"></script>
