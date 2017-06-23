@@ -6,12 +6,14 @@
   </head>
   <body>
     <script src="3rdparty/pep.js"></script>
+    <script src="swipe.js"></script>
     <script src="../dist/relax.js"></script>
     <script src="RelaxCanvas.js"></script>
     <script src="Turtle.js"></script>
     <canvas id="canvas" touch-action="none" tabindex="0"></canvas>
-    <demos id="demos"></demos>
+    <demos id="demos"><flap>DEMOS</flap></demos>
     <actions id="actions">
+      <flap>ACTIONS</flap>
       <action key='P'>P: point</action>
       <action key='D'>D: delete</action>
       <action key='F'>F: coordinate/1</action>
@@ -68,6 +70,37 @@ onload = function() {
   showDemo('clear');
 };
 
+var demoFlap = document.querySelector('demos flap');
+demoFlap.addEventListener('pointerup', function(e) {
+  if (demos.classList.contains('collapsed')) {
+    demos.classList.remove('collapsed');
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
+  }
+}, false);
+addSwipe(demos, {right: function(e) {
+  if (!demos.classList.contains('collapsed') && e.target === demos) {
+    demos.classList.add('collapsed');
+  }
+}});
+
+var actionFlap = document.querySelector('actions flap');
+actionFlap.addEventListener('pointerup', function(e) {
+  var actions = actionFlap.parentElement;
+  if (actions.classList.contains('collapsed')) {
+    actions.classList.remove('collapsed');
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
+  }
+}, false);
+addSwipe(actionFlap.parentElement, {left: function(e) {
+  var actions = actionFlap.parentElement;
+  if (!actions.classList.contains('collapsed') && e.target === actions) {
+    actions.classList.add('collapsed');
+  }
+}});
     </script>
 
     <script src="example-clear.js"></script>
