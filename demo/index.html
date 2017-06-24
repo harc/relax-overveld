@@ -19,7 +19,6 @@
     </demos>
     <actions id="actions">
       <flap>ACTIONS</flap>
-      <action style="text-align: center">⇦</action>
       <action key='P'>P: point</action>
       <action key='D'>D: delete</action>
       <action key='F'>F: coordinate/1</action>
@@ -31,6 +30,7 @@
       <action key='R'>R: parallel/4</action>
       <action key='N'>N: perpendicular/4</action>
       <action key='M'>M: motor/2</action>
+      <action style="text-align: center">⇦</action>
     </actions>
     <iterationsPerFrame id="ipf"></iterationsPerFrame>
     <showEachIterationButton id="sii"></showEachIterationButton>
@@ -46,7 +46,7 @@ function showDemo(name) {
 }
 
 var actions = document.getElementsByTagName('action');
-for (var idx = 1; idx < actions.length; idx++) {
+for (var idx = 0; idx < actions.length - 1; idx++) {
   var action = actions[idx];
   action.setAttribute('touch-action', 'none');
   action.addEventListener(
@@ -85,7 +85,7 @@ demoFlap.addEventListener('click', function(e) {
     return true;
   }
 }, false);
-document.querySelector('demo').addEventListener('click', function(e) {
+document.querySelector('demo:last-of-type').addEventListener('click', function(e) {
   if (!demos.classList.contains('collapsed')) {
     demos.classList.add('collapsed');
   }
@@ -101,7 +101,7 @@ actionFlap.addEventListener('click', function(e) {
     return true;
   }
 }, false);
-document.querySelector('action').addEventListener('click', function(e) {
+document.querySelector('action:last-of-type').addEventListener('click', function(e) {
   var actions = actionFlap.parentElement;
   if (!actions.classList.contains('collapsed')) {
     actions.classList.add('collapsed');
@@ -124,7 +124,7 @@ Object.keys(examples).forEach(function(e) {
   demo.onclick = function() {
     showDemo(e);
   };
-  demos.appendChild(demo);
+  demos.insertBefore(demo, demos.querySelector('demo:last-of-type'));
 });
 
 var canvas = document.getElementById('canvas');
