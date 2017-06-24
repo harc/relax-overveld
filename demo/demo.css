@@ -61,7 +61,6 @@ flap {
   background: #eee;
   border-radius: 1.5pt;
   border: 1px solid #ddd;
-/*  box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, .2);*/
   -webkit-user-select: none;
   -webkit-transition: visibility .5s step-start;
   transition: visibility .5s step-start;
@@ -69,7 +68,7 @@ flap {
 
 demos flap {
   letter-spacing: 2.5pt;
-/*  border-right: none;*/
+  box-shadow: 1px -1px 1px 0px rgba(0, 0, 0, .2);
   top: 24pt;
   left: -16pt;
   transform: rotate(90deg);
@@ -78,9 +77,9 @@ demos flap {
 
 actions flap {
   letter-spacing: 2pt;
-/*  border-left: none;*/
+  box-shadow: -1px 1px 1px 0px rgba(0, 0, 0, .2);
   top: 26pt;
-  right: -20pt;
+  right: -19pt;
   transform: rotate(270deg);
   -webkit-transform: rotate(270deg);
 }
