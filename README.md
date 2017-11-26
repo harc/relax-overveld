@@ -1,6 +1,6 @@
 # Relax
 
-[![Live demo](https://img.shields.io/badge/Live%20demo-%E2%86%92-9D6EB3.svg?style=flat-square)](http://alexwarth.github.io/demos/relax-overveld/)
+[![Live demo](https://img.shields.io/badge/Live%20demo-%E2%86%92-9D6EB3.svg?style=flat-square)](http://alexwarth.github.io/projects/relax-overveld/demo/)
 
 This is a library for "Overveld-style" constraint relaxation. It's based on C.W.A.M van Overveld's paper
 *[30 Years After Sketchpad: Relaxation of Geometric Constraints Revisited](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.24)*.
