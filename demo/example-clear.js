@@ -1,2 +1,0 @@
-examples.clear = function() {};
-
