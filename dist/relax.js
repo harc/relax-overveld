@@ -1,6 +1,8 @@
+// deno-fmt-ignore-file
+// deno-lint-ignore-file
+// This code was bundled using `deno bundle` and it's not recommended to edit it manually
+
 class Prop {
-    obj;
-    prop;
     constructor(obj, prop){
         this.obj = obj;
         this.prop = prop;
@@ -14,10 +16,10 @@ class Prop {
     set(v) {
         this.obj[this.prop] = v;
     }
+    obj;
+    prop;
 }
 class NumericDelta {
-    ref;
-    amount;
     constructor(ref, amount){
         this.ref = ref;
         this.amount = amount;
@@ -28,10 +30,10 @@ class NumericDelta {
     apply(rho) {
         this.ref.set(this.ref.get() + this.amount * rho);
     }
+    ref;
+    amount;
 }
 class ValueConstraint {
-    v;
-    targetValue;
     constructor(v, targetValue){
         this.v = v;
         this.targetValue = targetValue;
@@ -44,10 +46,10 @@ class ValueConstraint {
             new NumericDelta(this.v, this.targetValue - this.v.get())
         ];
     }
+    v;
+    targetValue;
 }
 class EqualityConstraint {
-    p1;
-    p2;
     constructor(p1, p2){
         this.p1 = p1;
         this.p2 = p2;
@@ -62,11 +64,10 @@ class EqualityConstraint {
             new NumericDelta(this.p2, +diff / 2)
         ];
     }
+    p1;
+    p2;
 }
 class SumConstraint {
-    addend1;
-    addend2;
-    sum;
     constructor(addend1, addend2, sum){
         this.addend1 = addend1;
         this.addend2 = addend2;
@@ -83,6 +84,9 @@ class SumConstraint {
             new NumericDelta(this.sum, -diff / 3)
         ];
     }
+    addend1;
+    addend2;
+    sum;
 }
 const mod = {
     Prop: Prop,
@@ -92,8 +96,6 @@ const mod = {
     SumConstraint: SumConstraint
 };
 class PointDelta {
-    p;
-    delta;
     constructor(p, delta){
         this.p = p;
         this.delta = delta;
@@ -106,6 +108,8 @@ class PointDelta {
         this.p.x += d.x;
         this.p.y += d.y;
     }
+    p;
+    delta;
 }
 function square(n) {
     return n * n;
@@ -152,8 +156,6 @@ function rotatedAround(p, dTheta, axis) {
     return plus(axis, rotatedBy(minus(p, axis), dTheta));
 }
 class CoordinateConstraint {
-    p;
-    c;
     constructor(p, c){
         this.p = p;
         this.c = c;
@@ -166,10 +168,10 @@ class CoordinateConstraint {
             new PointDelta(this.p, minus(this.c, this.p))
         ];
     }
+    p;
+    c;
 }
 class CoincidenceConstraint {
-    p1;
-    p2;
     constructor(p1, p2){
         this.p1 = p1;
         this.p2 = p2;
@@ -184,12 +186,10 @@ class CoincidenceConstraint {
             new PointDelta(this.p2, scaledBy(splitDiff, -1))
         ];
     }
-}
-class EquivalenceConstraint {
     p1;
     p2;
-    p3;
-    p4;
+}
+class EquivalenceConstraint {
     constructor(p1, p2, p3, p4){
         this.p1 = p1;
         this.p2 = p2;
@@ -208,12 +208,12 @@ class EquivalenceConstraint {
             new PointDelta(this.p4, splitDiff)
         ];
     }
-}
-class EqualDistanceConstraint {
     p1;
     p2;
     p3;
     p4;
+}
+class EqualDistanceConstraint {
     constructor(p1, p2, p3, p4){
         this.p1 = p1;
         this.p2 = p2;
@@ -236,11 +236,12 @@ class EqualDistanceConstraint {
             new PointDelta(this.p4, e34)
         ];
     }
-}
-class LengthConstraint {
     p1;
     p2;
-    l;
+    p3;
+    p4;
+}
+class LengthConstraint {
     constructor(p1, p2, l){
         this.p1 = p1;
         this.p2 = p2;
@@ -258,13 +259,11 @@ class LengthConstraint {
             new PointDelta(this.p2, scaledBy(e12, -1))
         ];
     }
-}
-class OrientationConstraint {
     p1;
     p2;
-    p3;
-    p4;
-    theta;
+    l;
+}
+class OrientationConstraint {
     constructor(p1, p2, p3, p4, theta){
         this.p1 = p1;
         this.p2 = p2;
@@ -291,22 +290,25 @@ class OrientationConstraint {
             new PointDelta(this.p4, minus(rotatedAround(this.p4, -dTheta, m34), this.p4))
         ];
     }
-}
-class MotorConstraint {
     p1;
     p2;
-    w;
-    lastT = Date.now();
+    p3;
+    p4;
+    theta;
+}
+class MotorConstraint {
+    lastT;
     constructor(p1, p2, w){
         this.p1 = p1;
         this.p2 = p2;
         this.w = w;
+        this.lastT = Date.now();
     }
     involves(thing) {
         return this.p1 === thing || this.p2 === thing;
     }
     computeDeltas(timeMillis) {
-        const t = (timeMillis - this.lastT) / 1000;
+        const t = (timeMillis - this.lastT) / 1000.0;
         this.lastT = timeMillis;
         const dTheta = t * this.w * (2 * Math.PI);
         const m12 = midpoint(this.p1, this.p2);
@@ -315,6 +317,9 @@ class MotorConstraint {
             new PointDelta(this.p2, minus(rotatedAround(this.p2, dTheta, m12), this.p2))
         ];
     }
+    p1;
+    p2;
+    w;
 }
 const mod1 = {
     PointDelta: PointDelta,
@@ -336,7 +341,7 @@ const mod1 = {
     OrientationConstraint: OrientationConstraint,
     MotorConstraint: MotorConstraint
 };
-class Relax1 {
+class Relax {
     rho = 0.25;
     epsilon = 0.01;
     constraints = [];
@@ -345,8 +350,7 @@ class Relax1 {
         return constraint;
     }
     remove(unwantedThing) {
-        this.constraints = this.constraints.filter((constraint)=>constraint !== unwantedThing && !constraint.involves(unwantedThing)
-        );
+        this.constraints = this.constraints.filter((constraint)=>constraint !== unwantedThing && !constraint.involves(unwantedThing));
     }
     clear() {
         this.constraints = [];
@@ -358,13 +362,11 @@ class Relax1 {
         const allDeltas = [];
         this.constraints.forEach((t)=>{
             const deltas = t.computeDeltas(startTimeMillis);
-            if (deltas.some((d)=>d.isSignificant(this.epsilon)
-            )) {
+            if (deltas.some((d)=>d.isSignificant(this.epsilon))) {
                 allDeltas.push(...deltas);
             }
         });
-        allDeltas.forEach((d)=>d.apply(this.rho)
-        );
+        allDeltas.forEach((d)=>d.apply(this.rho));
         return allDeltas.length > 0;
     }
     iterateForUpToMillis(milliseconds) {
@@ -379,4 +381,4 @@ class Relax1 {
 }
 export { mod as arith };
 export { mod1 as geom };
-export { Relax1 as Relax };
+export { Relax as Relax };

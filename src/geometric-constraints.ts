@@ -8,18 +8,8 @@ export type Point = {
 };
 
 export class PointDelta implements Relax.Delta {
-    readonly p: Point;
-    readonly delta: Point;
-
-    constructor (p: Point, delta: Point) {
-        this.p = p;
-        this.delta = delta;
-    }
-
-    isSignificant(epsilon: number): boolean {
-        return magnitude(this.delta) > epsilon;
-    }
-
+    constructor(public readonly p: Point, public readonly delta: Point) {}
+    isSignificant(epsilon: number): boolean { return magnitude(this.delta) > epsilon; }
     apply(rho: number): void {
         const d = scaledBy(this.delta, rho);
         this.p.x += d.x;
@@ -73,18 +63,8 @@ export function rotatedAround(p: Point, dTheta: number, axis: Point): Point {
 
 // Coordinate Constraint, i.e., "I want this point to be here".
 export class CoordinateConstraint implements Relax.Constraint {
-    readonly p: Point;
-    readonly c: Point;
-
-    constructor (p: Point, c: Point) {
-        this.p = p;
-        this.c = c;
-    }
-
-    involves(thing: unknown): boolean {
-        return this.p === thing || this.c === thing;
-    }
-
+    constructor(public readonly p: Point, public readonly c: Point) {}
+    involves(thing: unknown): boolean { return this.p === thing || this.c === thing; }
     computeDeltas(_timeMillis: number): Array<Relax.Delta> {
         return [new PointDelta(this.p, minus(this.c, this.p))];
     }
@@ -92,18 +72,8 @@ export class CoordinateConstraint implements Relax.Constraint {
 
 // Coincidence Constraint, i.e., I want these two points to be at the same place.
 export class CoincidenceConstraint implements Relax.Constraint {
-    readonly p1: Point;
-    readonly p2: Point;
-
-    constructor (p1: Point, p2: Point) {
-        this.p1 = p1;
-        this.p2 = p2;
-    }
-
-    involves(thing: unknown): boolean {
-        return this.p1 === thing || this.p2 === thing;
-    }
-
+    constructor(public readonly p1: Point, public readonly p2: Point) {}
+    involves(thing: unknown): boolean { return this.p1 === thing || this.p2 === thing; }
     computeDeltas(_timeMillis: number): Array<Relax.Delta> {
         const splitDiff = scaledBy(minus(this.p2, this.p1), 0.5);
         return [new PointDelta(this.p1, splitDiff),
@@ -113,17 +83,12 @@ export class CoincidenceConstraint implements Relax.Constraint {
 
 // Equivalence Constraint, i.e., I want the vectors p1->p2 and p3->p4 to be the same.
 export class EquivalenceConstraint implements Relax.Constraint {
-    readonly p1: Point;
-    readonly p2: Point;
-    readonly p3: Point;
-    readonly p4: Point;
-
-    constructor (p1: Point, p2: Point, p3: Point, p4: Point) {
-        this.p1 = p1;
-        this.p2 = p2;
-        this.p3 = p3;
-        this.p4 = p4;
-    }
+    constructor(
+        public readonly p1: Point,
+        public readonly p2: Point,
+        public readonly p3: Point,
+        public readonly p4: Point,
+    ) {}
 
     involves(thing: unknown): boolean {
         return this.p1 === thing
@@ -145,17 +110,12 @@ export class EquivalenceConstraint implements Relax.Constraint {
 
 // Equal Distance constraint - keeps distances P1-->P2, P3-->P4 equal
 export class EqualDistanceConstraint implements Relax.Constraint {
-    readonly p1: Point;
-    readonly p2: Point;
-    readonly p3: Point;
-    readonly p4: Point;
-
-    constructor (p1: Point, p2: Point, p3: Point, p4: Point) {
-        this.p1 = p1;
-        this.p2 = p2;
-        this.p3 = p3;
-        this.p4 = p4;
-    }
+    constructor(
+        public readonly p1: Point,
+        public readonly p2: Point,
+        public readonly p3: Point,
+        public readonly p4: Point,
+    ) {}
 
     involves(thing: unknown): boolean {
         return this.p1 === thing
@@ -179,15 +139,11 @@ export class EqualDistanceConstraint implements Relax.Constraint {
 
 // Length constraint - maintains distance between P1 and P2 at L.
 export class LengthConstraint implements Relax.Constraint {
-    readonly p1: Point;
-    readonly p2: Point;
-    readonly l: number;
-
-    constructor (p1: Point, p2: Point, l: number) {
-        this.p1 = p1;
-        this.p2 = p2;
-        this.l = l;
-    }
+    constructor(
+        public readonly p1: Point,
+        public readonly p2: Point,
+        public readonly l: number,
+    ) {}
 
     involves(thing: unknown): boolean {
         return this.p1 === thing || this.p2 === thing;
@@ -204,19 +160,13 @@ export class LengthConstraint implements Relax.Constraint {
 
 // Orientation constraint - maintains angle between P1->P2 and P3->P4 at Theta
 export class OrientationConstraint implements Relax.Constraint {
-    readonly p1: Point;
-    readonly p2: Point;
-    readonly p3: Point;
-    readonly p4: Point;
-    readonly theta: number;
-
-    constructor (p1: Point, p2: Point, p3: Point, p4: Point, theta: number) {
-        this.p1 = p1;
-        this.p2 = p2;
-        this.p3 = p3;
-        this.p4 = p4;
-        this.theta = theta;
-    }
+    constructor(
+        public readonly p1: Point,
+        public readonly p2: Point,
+        public readonly p3: Point,
+        public readonly p4: Point,
+        public readonly theta: number,
+    ) {}
 
     involves(thing: unknown): boolean {
         return this.p1 === thing
@@ -249,16 +199,13 @@ export class OrientationConstraint implements Relax.Constraint {
 // Motor constraint - causes P1 and P2 to orbit their midpoint at the given rate.
 // w is in units of Hz - whole rotations per second.
 export class MotorConstraint implements Relax.Constraint {
-    readonly p1: Point;
-    readonly p2: Point;
-    readonly w: number;
     lastT = Date.now();
 
-    constructor (p1: Point, p2: Point, w: number) {
-        this.p1 = p1;
-        this.p2 = p2;
-        this.w = w;
-    }
+    constructor(
+        public readonly p1: Point,
+        public readonly p2: Point,
+        public readonly w: number,
+    ) {}
 
     involves(thing: unknown): boolean {
         return this.p1 === thing || this.p2 === thing;

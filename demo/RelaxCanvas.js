@@ -1,7 +1,7 @@
 import * as Relax from '../dist/relax.js';
 
 export class Line {
-  constructor (p1, p2) {
+  constructor(p1, p2) {
     this.p1 = p1;
     this.p2 = p2;
   }
@@ -12,7 +12,7 @@ export class Line {
 }
 
 export class RelaxCanvas {
-  constructor (relax, canvas) {
+  constructor(relax, canvas) {
     this.offsetX = 0;
     this.offsetY = 0;
 

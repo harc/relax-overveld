@@ -52,7 +52,7 @@ function setupFlap(flap, childElementName) {
 function setupDemoButtons(rc) {
   const demos = document.getElementById('demos');
   Object.keys(examples).forEach(e => {
-    var demo = document.createElement('demo');
+    const demo = document.createElement('demo');
     demo.appendChild(document.createTextNode(e));
     demo.onclick = () => {
       rc.clear();
@@ -75,7 +75,7 @@ function setupFrameRateDisplay(rc) {
 }
 
 function setupShowEachIterationButton(rc) {
-  var sii = document.getElementById('sii');
+  const sii = document.getElementById('sii');
   function updateSIILabel() {
     sii.innerHTML = (rc.showEachIteration ? '' : 'not ') + ' rendering after each iteration';
   }
