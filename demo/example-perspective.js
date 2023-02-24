@@ -1,16 +1,19 @@
-examples.perspective = function() {
-  var vp1 = rc.addPoint(300, 800);
-  var vp2 = rc.addPoint(1100, 800);
+import * as Relax from '../dist/relax.js';
+import { parallelConstraint } from './RelaxCanvas.js';
 
-  var centerFoot = rc.addPoint(600, 600);
-  var leftFoot = rc.addPoint(500, 500);
-  var rightFoot = rc.addPoint(900, 500);
-  var backFoot = rc.addPoint(700, 467);
+export function perspectiveExample(rc) {
+  const vp1 = rc.addPoint(300, 800);
+  const vp2 = rc.addPoint(1100, 800);
 
-  var centerHead = rc.addPoint(600, 300);
-  var leftHead = rc.addPoint(500, 350);
-  var rightHead = rc.addPoint(900, 350);
-  var backHead = rc.addPoint(700, 367);
+  const centerFoot = rc.addPoint(600, 600);
+  const leftFoot = rc.addPoint(500, 500);
+  const rightFoot = rc.addPoint(900, 500);
+  const backFoot = rc.addPoint(700, 467);
+
+  const centerHead = rc.addPoint(600, 300);
+  const leftHead = rc.addPoint(500, 350);
+  const rightHead = rc.addPoint(900, 350);
+  const backHead = rc.addPoint(700, 367);
 
   rc.addLine(vp1, centerFoot);
   rc.addLine(centerFoot, vp2);
@@ -33,10 +36,10 @@ examples.perspective = function() {
     rc.addLine(rightFoot, backFoot);
     // rc.addLine(rightFoot, backFoot);
     // rc.addLine(rightFoot, backFoot);
-  rc.addParallelConstraint(vp1, centerFoot, leftFoot, centerFoot);
-  rc.addParallelConstraint(vp2, centerFoot, rightFoot, centerFoot);
-  rc.addParallelConstraint(vp1, backFoot, backFoot, rightFoot);
-  rc.addParallelConstraint(vp2, backFoot, backFoot, leftFoot);
+  rc.addConstraint(parallelConstraint(vp1, centerFoot, leftFoot, centerFoot));
+  rc.addConstraint(parallelConstraint(vp2, centerFoot, rightFoot, centerFoot));
+  rc.addConstraint(parallelConstraint(vp1, backFoot, backFoot, rightFoot));
+  rc.addConstraint(parallelConstraint(vp2, backFoot, backFoot, leftFoot));
 
   rc.addLine(leftHead, centerHead);
     rc.addLine(leftHead, centerHead);
@@ -54,10 +57,10 @@ examples.perspective = function() {
     rc.addLine(rightHead, backHead);
     // rc.addLine(rightHead, backHead);
     // rc.addLine(rightHead, backHead);
-  rc.addParallelConstraint(vp1, centerHead, leftHead, centerHead);
-  rc.addParallelConstraint(vp2, centerHead, rightHead, centerHead);
-  rc.addParallelConstraint(vp1, backHead, backHead, rightHead);
-  rc.addParallelConstraint(vp2, backHead, backHead, leftHead);
+  rc.addConstraint(parallelConstraint(vp1, centerHead, leftHead, centerHead));
+  rc.addConstraint(parallelConstraint(vp2, centerHead, rightHead, centerHead));
+  rc.addConstraint(parallelConstraint(vp1, backHead, backHead, rightHead));
+  rc.addConstraint(parallelConstraint(vp2, backHead, backHead, leftHead));
 
   rc.addLine(leftFoot, leftHead);
     rc.addLine(leftFoot, leftHead);
@@ -79,13 +82,13 @@ examples.perspective = function() {
     rc.addLine(backFoot, backHead);
     // rc.addLine(backFoot, backHead);
     // rc.addLine(backFoot, backHead);
-  rc.addParallelConstraint(leftHead, leftFoot, centerHead, centerFoot);
-  rc.addParallelConstraint(rightHead, rightFoot, centerHead, centerFoot);
-  rc.addParallelConstraint(backHead, backFoot, centerHead, centerFoot);
+  rc.addConstraint(parallelConstraint(leftHead, leftFoot, centerHead, centerFoot));
+  rc.addConstraint(parallelConstraint(rightHead, rightFoot, centerHead, centerFoot));
+  rc.addConstraint(parallelConstraint(backHead, backFoot, centerHead, centerFoot));
 
   // try to keep the center line the same length at all times
-  var l = Relax.geom.magnitude(Relax.geom.minus(centerHead, centerFoot));
-  rc.addLengthConstraint(centerFoot, centerHead, l);
+  const l = Relax.geom.magnitude(Relax.geom.minus(centerHead, centerFoot));
+  rc.addConstraint(new Relax.geom.LengthConstraint(centerFoot, centerHead, l));
 
   // add lines in the back
   rc.addLine(vp1, rightFoot);
@@ -94,11 +97,10 @@ examples.perspective = function() {
   rc.addLine(vp2, leftHead);
 
   // keep vertical lines upright
-  var upright = rc.addPoint(-50, 550);
-  var downright = rc.addPoint(-50, 650);
+  const upright = rc.addPoint(-50, 550);
+  const downright = rc.addPoint(-50, 650);
   rc.addLine(upright, downright);
-  rc.addCoordinateConstraint(upright, -50, 550);
-  rc.addCoordinateConstraint(downright, -50, 650);
-  rc.addParallelConstraint(upright, downright, centerHead, centerFoot);
-};
-
+  rc.addConstraint(new Relax.geom.CoordinateConstraint(upright, {x: -50, y: 550}));
+  rc.addConstraint(new Relax.geom.CoordinateConstraint(downright, {x: -50, y: 650}));
+  rc.addConstraint(parallelConstraint(upright, downright, centerHead, centerFoot));
+}

@@ -8,14 +8,12 @@
   ],
   "homepage": "https://github.com/cdglabs/relax-overveld",
   "bugs": "https://github.com/cdglabs/relax-overveld/issues",
-  "main": "src/main.js",
+  "main": "src/main.ts",
   "scripts": {
-    "clean": "rm -f dist/relax.js dist/relax.min.js",
-    "build-debug": "browserify src/main.js -d -s Relax -o dist/relax.js",
-    "build-min": "browserify src/main.js -s Relax -o dist/_relax.js && uglifyjs dist/_relax.js -o dist/relax.min.js && rm dist/_relax.js",
-    "build": "npm run build-debug && npm run build-min",
-    "watch": "watchify src/main.js -d -s Relax -o dist/relax.js",
-    "prepublish": "npm run build"
+    "clean": "rm -f dist/relax.js",
+    "build": "deno bundle src/main.ts dist/relax.js && minify dist/relax.js > dist/relax.min.js",
+    "watch": "deno bundle --watch src/main.ts dist/relax.js",
+    "prepublish": "yarn run build"
   },
   "license": "MIT",
   "author": "Alex Warth <alexwarth@gmail.com> (http://tinlizzie.org/~awarth)",
@@ -24,8 +22,6 @@
     "Tony Garnock-Jones <tonygarnockjones@gmail.com>"
   ],
   "devDependencies": {
-    "watchify": "^3.9.0",
-    "uglify-js": "^2.4.12",
-    "browserify": "^3.30.4"
+    "minify": "^8"
   }
 }
